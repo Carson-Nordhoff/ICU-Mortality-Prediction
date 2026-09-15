@@ -1,0 +1,5 @@
+#ignore all data
+data/*
+
+#keep empty data folder
+!data/.gitkeep
