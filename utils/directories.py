@@ -3,7 +3,10 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).resolve().parent.parent
 
 DATA_DIR = ROOT_DIR / "data"
-ADMISSIONS_DIR = DATA_DIR / "ADMISSIONS.csv"
+ADMISSIONS = DATA_DIR / "ADMISSIONS.csv"
+PATIENTS = DATA_DIR / "PATIENTS.csv"
+
+CSV_DIR = [ADMISSIONS, PATIENTS]
 
 def ensure_directories():
 
