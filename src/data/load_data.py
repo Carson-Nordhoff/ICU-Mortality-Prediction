@@ -3,6 +3,7 @@ from utils.logger import get_logger
 from sqlalchemy import create_engine
 from utils.db_config import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
 import pandas as pd
+import os
 
 data_logger = get_logger(__name__)
 
@@ -37,9 +38,8 @@ def inspect_data(data):
 #inserts data into postgre
 def insert_raw_data(data):
 
-    admissions = data[0]
-
     engine = get_engine()
     data_logger.info("Inserting data into mimic3 database.")
-    admissions.to_sql('admissions', engine, if_exists='replace', index=False)
+    data[0].to_sql('admissions', engine, if_exists='replace', index=False)
     data_logger.info("admissions loaded successfully.")
+
