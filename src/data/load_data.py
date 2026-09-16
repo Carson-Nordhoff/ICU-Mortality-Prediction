@@ -43,3 +43,12 @@ def insert_raw_data(data):
     data[0].to_sql('admissions', engine, if_exists='replace', index=False)
     data_logger.info("admissions loaded successfully.")
 
+def load_clean_mimic_data():
+
+    engine = get_engine()
+
+    data_logger.info("Getting cleaned data from mimic3 database.")
+    df = pd.read_sql("SELECT * FROM admissions", engine)
+    data_logger.info("Loaded cleaned data from mimic3 database.")
+
+    return df
