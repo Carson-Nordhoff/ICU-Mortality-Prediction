@@ -1,4 +1,4 @@
-from utils.directories import CSV_DIR
+from utils.directories import CSV_DIRS
 from utils.logger import get_logger
 from sqlalchemy import create_engine
 from utils.db_config import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
@@ -18,7 +18,7 @@ def load_data():
     raw_data = []
 
     data_logger.info("Loading raw data...")
-    for csv_file in CSV_DIR:
+    for csv_file in CSV_DIRS:
 
         data_logger.info(f"Successfully loaded {csv_file}")
         df = pd.read_csv(csv_file)
