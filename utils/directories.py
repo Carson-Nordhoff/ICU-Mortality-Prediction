@@ -2,13 +2,16 @@ from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 
-DATA_DIR = ROOT_DIR / "data"
-ADMISSIONS = DATA_DIR / "ADMISSIONS.csv"
-PATIENTS = DATA_DIR / "PATIENTS.csv"
+RAW_DATA_DIR = ROOT_DIR / "data"
+ADMISSIONS = RAW_DATA_DIR / "ADMISSIONS.csv"
+#PATIENTS = RAW_DATA_DIR / "PATIENTS.csv"
 
-CSV_DIR = [ADMISSIONS, PATIENTS]
+CSV_DIR = [ADMISSIONS]
+
+SQL_DIR = ROOT_DIR / "sql"
+SQL_CODE = SQL_DIR / "create_table.sql"
 
 def ensure_directories():
 
-    for dir in [DATA_DIR]:
+    for dir in [RAW_DATA_DIR]:
         Path(dir).mkdir(parents=True, exist_ok=True)

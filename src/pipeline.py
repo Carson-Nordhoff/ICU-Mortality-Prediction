@@ -1,5 +1,6 @@
 from utils.directories import ensure_directories
-from src.data.load_data import load_data, inspect_data
+from src.data.load_data import load_data, inspect_data, insert_raw_data
+
 
 def pipeline():
 
@@ -7,6 +8,8 @@ def pipeline():
 
     raw_data = load_data()
     inspect_data(raw_data)
+
+    insert_raw_data(raw_data)
 
 if __name__ == "__main__":
     pipeline()

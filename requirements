@@ -1,2 +1,5 @@
 pathlib
 pandas
+dotenv
+sqlalchemy
+psycopg[binary]

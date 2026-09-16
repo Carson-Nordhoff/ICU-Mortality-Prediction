@@ -3,3 +3,6 @@ data/*
 
 #keep empty data folder
 !data/.gitkeep
+
+#ignore the environment variables
+.env
