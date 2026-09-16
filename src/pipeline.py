@@ -3,6 +3,7 @@ from src.data.load_data import load_data, inspect_data, insert_raw_data, load_cl
 from src.data.clean_data import clean_data
 from utils.directories import ensure_directories
 from utils.logger import get_logger
+from src.models.train_model import get_preprocessor
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
@@ -13,6 +14,10 @@ from sklearn.compose import ColumnTransformer
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
 pipeline_logger = get_logger(__name__)
+
+numeric_features = []
+categorical_features = ["marital_status", "religion", "language", "insurance", "admission_type"]
+binary_features = []
 
 def pipeline():
 
@@ -34,26 +39,7 @@ def pipeline():
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    numeric_features = []
-    categorical_features = ["marital_status", "religion", "language", "insurance", "admission_type"]
-    binary_features = []
-
-    categorical_transformer = Pipeline(steps=[
-        ('imputer', SimpleImputer(strategy='most_frequent')),
-        ('encoder', OneHotEncoder(handle_unknown='ignore'))
-    ])
-
-    numeric_transformer = Pipeline(steps=[
-        ('imputer', SimpleImputer(strategy='median')),
-        ('scaler', StandardScaler())
-    ])
-
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ('num', numeric_transformer, numeric_features),
-            ('cat', categorical_transformer, categorical_features)
-        ]
-    )
+    preprocessor = get_preprocessor(numeric_features, categorical_features)
 
     clf = Pipeline(steps=[
         ('preprocessor', preprocessor),
