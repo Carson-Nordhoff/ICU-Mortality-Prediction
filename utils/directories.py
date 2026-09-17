@@ -12,6 +12,10 @@ CSV_DIRS = [ADMISSIONS]
 SQL_DIR = ROOT_DIR / "sql"
 SQL_CODE = SQL_DIR / "clean_data.sql"
 
+ARTIFACT_DIR = ROOT_DIR / "artifacts"
+LOG_DIR = ARTIFACT_DIR / "logs"
+PIPELINE_LOG_DIR = LOG_DIR / "pipeline_logs.log"
+
 def ensure_directories():
 
     for dir in [RAW_DATA_DIR]:
