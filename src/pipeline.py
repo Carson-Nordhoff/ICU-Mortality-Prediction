@@ -31,7 +31,7 @@ def pipeline():
     pipeline_logger.info(df.info())
     pipeline_logger.info(df.head())
 
-    X = df.drop(columns=['hospital_expire_flag'])
+    X = df.drop(columns=['hospital_expire_flag', 'subject_id', 'hadm_id'])
     y = df['hospital_expire_flag']
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)

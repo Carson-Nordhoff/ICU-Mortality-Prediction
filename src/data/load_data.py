@@ -2,6 +2,7 @@ from utils.directories import CSV_DIRS
 from utils.logger import get_logger
 from sqlalchemy import create_engine
 from utils.db_config import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
+from pathlib import Path
 import pandas as pd
 import os
 
@@ -16,21 +17,22 @@ def get_engine():
 #load data from raw csvs
 def load_data():
 
-    raw_data = []
+    raw_data = {}
 
     data_logger.info("Loading raw data...")
-    for csv_file in CSV_DIRS:
+    for csv_dir in CSV_DIRS:
 
-        data_logger.info(f"Successfully loaded {csv_file}")
-        df = pd.read_csv(csv_file)
+        data_logger.info(f"Successfully loaded {csv_dir}")
+        df = pd.read_csv(csv_dir)
         df.columns = df.columns.str.lower()
-        raw_data.append(df)
+        csv_name = Path(csv_dir).stem.lower()
+        raw_data[csv_name] = df
 
     return raw_data
 
 #inspects head and info per csv
 def inspect_data(data):
-    for raw_csv in data:
+    for raw_csv in data.values():
         data_logger.info(f"Data inspection for {raw_csv}")
         data_logger.info(raw_csv.head())
         data_logger.info(raw_csv.info())
@@ -40,8 +42,11 @@ def insert_raw_data(data):
 
     engine = get_engine()
     data_logger.info("Inserting data into mimic3 database.")
-    data[0].to_sql('admissions', engine, if_exists='replace', index=False)
-    data_logger.info("admissions loaded successfully.")
+
+    for df_name, raw_df in data.items():
+
+        raw_df.to_sql(df_name, engine, if_exists='replace', index=False)
+        data_logger.info(f"{df_name} loaded successfully.")
 
 def load_clean_mimic_data():
 
