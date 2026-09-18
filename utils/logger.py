@@ -23,7 +23,8 @@ def get_logger(name):
     file_handler = RotatingFileHandler(
         PIPELINE_LOG_DIR,
         maxBytes=10 * 1024 * 1024,
-        backupCount=10
+        backupCount=10,
+        encoding="utf-8" #avoid special char crashes
     )
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
