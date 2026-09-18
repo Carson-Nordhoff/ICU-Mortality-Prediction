@@ -1,3 +1,9 @@
+#MODEL TO-DO#
+
+#Add GroupShuffleSplit (prevent patient/entity level leakage)
+#Handle mortality class imbalance
+#Adjust system to multiple model analysis for optimal model
+
 from src.data import clean_data
 from src.data.load_data import load_data, inspect_data, insert_raw_data, load_clean_mimic_data
 from src.data.clean_data import clean_data
@@ -12,8 +18,8 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 
 pipeline_logger = get_logger(__name__)
 
-numeric_features = []
-categorical_features = ["marital_status", "religion", "language", "insurance", "admission_type"]
+numeric_features = ["age"]
+categorical_features = ["marital_status", "religion", "language", "insurance", "admission_type", "first_careunit"]
 binary_features = []
 
 def pipeline():
@@ -31,7 +37,7 @@ def pipeline():
     pipeline_logger.info(df.info())
     pipeline_logger.info(df.head())
 
-    X = df.drop(columns=['hospital_expire_flag', 'subject_id', 'hadm_id'])
+    X = df.drop(columns=['hospital_expire_flag'])
     y = df['hospital_expire_flag']
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)

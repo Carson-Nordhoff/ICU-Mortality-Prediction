@@ -53,7 +53,13 @@ def load_clean_mimic_data():
     engine = get_engine()
 
     data_logger.info("Getting cleaned data from mimic3 database.")
-    df = pd.read_sql("SELECT * FROM admissions", engine)
+    df = pd.read_sql("SELECT * FROM clean_mimic_data", engine)
+
+    #TO-DO add a check that warns against
+    #data misalignment with the manually specified data
+    data_logger.info(f'Columns: {df.columns.to_list()}')
+
+
     data_logger.info("Loaded cleaned data from mimic3 database.")
 
     return df
