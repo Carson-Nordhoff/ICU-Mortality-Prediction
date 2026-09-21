@@ -43,7 +43,7 @@ def pipeline():
     groups = df['subject_id']
 
     pipeline_logger.info(f'Class balance for hospital_expire_flag: {y.value_counts().to_dict()}')
-    pipeline_logger.info(f'Percentile balance for hospital_expire_flag: {y.value_counts(normalize=True).to_dict()}')
+    pipeline_logger.info(f'Percentile balance for hospital_expire_flag: {y.value_counts(normalize=True).round(3).to_dict()}')
 
     sgkf = StratifiedGroupKFold(n_splits=3, shuffle=True, random_state=42)
 
@@ -56,8 +56,8 @@ def pipeline():
         X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
         y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
 
-        pipeline_logger.info(f'Train balance: {y_train.value_counts(normalize=True).to_dict()}')
-        pipeline_logger.info(f'Test balance: {y_test.value_counts(normalize=True).to_dict()}')
+        pipeline_logger.info(f'Train balance: {y_train.value_counts(normalize=True).round(3).to_dict()}')
+        pipeline_logger.info(f'Test balance: {y_test.value_counts(normalize=True).round(3).to_dict()}')
 
         train_subjects = set(groups.iloc[train_idx])
         test_subjects = set(groups.iloc[test_idx])

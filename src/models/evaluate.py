@@ -12,11 +12,8 @@ def evaluate(y_test, y_preds, y_probas):
     avg_precision = average_precision_score(y_test, y_probas)
     roc_auc = roc_auc_score(y_test, y_probas)
 
-    evaluate_logger.info(f"Accuracy: {acc}")
-    evaluate_logger.info(f"Precision: {precision}")
-    evaluate_logger.info(f"Recall: {recall}")
-    evaluate_logger.info(f"F1 Score: {f1}")
-    evaluate_logger.info(f"Average Precision Score: {avg_precision}")
-    evaluate_logger.info(f"ROC-AUC Score: {roc_auc}")
+    evaluate_logger.info(
+        f"Accuracy: {acc:.3f} | Precision: {precision:.3f} | Recall: {recall:.3f} | F1 Score: {f1:.3f} | Average Precision: {avg_precision:.3f} | ROC AUC: {roc_auc:.3f} |"
+    )
 
     return acc, precision, recall, f1, avg_precision, roc_auc
