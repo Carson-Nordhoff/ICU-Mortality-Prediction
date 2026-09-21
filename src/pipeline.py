@@ -9,6 +9,8 @@ from src.data.load_data import load_data, inspect_data, insert_raw_data, load_cl
 from src.data.clean_data import clean_data
 from src.models.train_model import get_preprocessor
 from src.models.evaluate import evaluate
+from src.models.save_model import save_model, load_model
+
 from utils.directories import ensure_directories
 from utils.logger import get_logger
 
@@ -53,6 +55,9 @@ def pipeline():
     preds = clf.predict(X_test)
 
     evaluate(y_test, preds)
+
+    save_model(clf)
+    clf = load_model()
 
 if __name__ == "__main__":
     pipeline()

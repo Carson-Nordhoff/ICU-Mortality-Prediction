@@ -4,3 +4,4 @@ dotenv
 sqlalchemy
 psycopg[binary]
 scikit-learn
+joblib

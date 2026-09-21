@@ -15,7 +15,10 @@ SQL_CODE = SQL_DIR / "clean_data.sql"
 
 ARTIFACT_DIR = ROOT_DIR / "artifacts"
 LOG_DIR = ARTIFACT_DIR / "logs"
+
 PIPELINE_LOG_DIR = LOG_DIR / "pipeline_logs.log"
+MODELS_DIR = ARTIFACT_DIR / "models"
+TRAINED_MODEL = MODELS_DIR / "trained_model.pkl"
 
 def ensure_directories():
 
