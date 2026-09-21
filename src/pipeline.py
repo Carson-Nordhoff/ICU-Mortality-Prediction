@@ -42,13 +42,16 @@ def pipeline():
     X = df.drop(columns=['hospital_expire_flag'])
     y = df['hospital_expire_flag']
 
+    pipeline_logger.info(f'Class balance for hospital_expire_flag: {y.value_counts()}')
+    pipeline_logger.info(f'Percentile balance for hospital_expire_flag: {y.value_counts(normalize=True)}')
+
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     preprocessor = get_preprocessor(numeric_features, categorical_features)
 
     clf = Pipeline(steps=[
         ('preprocessor', preprocessor),
-        ('classifier', LogisticRegression())
+        ('classifier', LogisticRegression(class_weight='balanced'))
     ])
 
     clf.fit(X_train, y_train)
