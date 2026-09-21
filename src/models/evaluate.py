@@ -14,3 +14,5 @@ def evaluate(y_test, y_preds):
     evaluate_logger.info(f"Precision: {precision}")
     evaluate_logger.info(f"Recall: {recall}")
     evaluate_logger.info(f"F1 Score: {f1}")
+
+    return acc, precision, recall, f1

@@ -34,7 +34,8 @@ icustays_features as (
     from icustays icu
 )
 select
-    af.hospital_expire_flag,
+    af.hospital_expire_flag, --flag
+    af.subject_id, --id
 
     af.marital_status,
     af.religion,
