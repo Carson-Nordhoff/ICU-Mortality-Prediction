@@ -7,14 +7,14 @@
 from src.data import clean_data
 from src.data.load_data import load_data, inspect_data, insert_raw_data, load_clean_mimic_data
 from src.data.clean_data import clean_data
+from src.models.train_model import get_preprocessor
+from src.models.evaluate import evaluate
 from utils.directories import ensure_directories
 from utils.logger import get_logger
-from src.models.train_model import get_preprocessor
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
 pipeline_logger = get_logger(__name__)
 
@@ -52,15 +52,7 @@ def pipeline():
     clf.fit(X_train, y_train)
     preds = clf.predict(X_test)
 
-    acc = accuracy_score(y_test, preds)
-    precision = precision_score(y_test, preds)
-    recall = recall_score(y_test, preds)
-    f1 = f1_score(y_test, preds)
-
-    pipeline_logger.info(f"Accuracy: {acc}")
-    pipeline_logger.info(f"Precision: {precision}")
-    pipeline_logger.info(f"Recall: {recall}")
-    pipeline_logger.info(f"F1 Score: {f1}")
+    evaluate(y_test, preds)
 
 if __name__ == "__main__":
     pipeline()
