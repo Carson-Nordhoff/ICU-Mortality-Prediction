@@ -72,15 +72,18 @@ def pipeline():
 
         clf.fit(X_train, y_train)
         preds = clf.predict(X_test)
+        probs = clf.predict_proba(X_test)[:, 1]
 
-        acc, precision, recall, f1 = evaluate(y_test, preds)
+        acc, precision, recall, f1, avg_precision, roc_auc = evaluate(y_test, preds, probs)
 
         models[fold] = {
             'model': clf,
             'acc': acc,
             'precision': precision,
             'recall': recall,
-            'f1': f1
+            'f1': f1,
+            'avg_precision': avg_precision,
+            'roc_auc': roc_auc
         }
 
     dummy_model = models[0]
