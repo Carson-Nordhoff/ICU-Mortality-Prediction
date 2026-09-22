@@ -37,6 +37,7 @@ def pipeline():
 
     pipeline_logger.info(df.info())
     pipeline_logger.info(df.head())
+    pipeline_logger.info(f'Missingness per column:\n {df.isnull().mean().round(3)}')
 
     X = df.drop(columns=['hospital_expire_flag'])
     y = df['hospital_expire_flag']
