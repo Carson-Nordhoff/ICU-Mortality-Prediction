@@ -19,8 +19,25 @@ from sklearn.model_selection import train_test_split, StratifiedGroupKFold
 
 pipeline_logger = get_logger(__name__)
 
-numeric_features = ["age"]
-categorical_features = ["marital_status", "religion", "language", "insurance", "admission_type", "first_careunit"]
+
+
+numeric_features = [
+    "age",
+    "avg_heart_rate",
+    "avg_systolic_bp",
+    "avg_diastolic_bp",
+    "avg_respiratory_rate",
+    "avg_body_temp",
+    "avg_spo2"
+]
+categorical_features = [
+    "marital_status",
+    "religion",
+    "language",
+    "insurance",
+    "admission_type",
+    "first_careunit"
+]
 binary_features = []
 
 def pipeline():
