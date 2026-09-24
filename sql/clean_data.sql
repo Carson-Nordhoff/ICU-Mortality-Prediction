@@ -70,7 +70,10 @@ chartevent_features as (
         ) as avg_respiratory_rate,
 
         avg(
-            case when ce.itemid in (676, 678, 223761, 223762) then ce.valuenum end
+            case
+                when ce.itemid in (676, 223762) then ce.valuenum --celcius
+                when ce.itemid in (678, 223761) then (ce.valuenum-32)*(5/9) --convert fahrenheit to calcius
+            end
         ) as avg_body_temp,
 
         avg(
