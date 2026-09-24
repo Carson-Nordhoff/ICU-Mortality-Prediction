@@ -7,6 +7,9 @@ alter table icustays
 alter table chartevents
     alter column charttime type timestamp using charttime::timestamp;
 
+alter table labevents
+    alter column charttime type timestamp using charttime::timestamp;
+
 create table clean_mimic_data as
 with admission_features as (
     select
@@ -88,6 +91,44 @@ chartevent_features as (
           and ce.charttime >= it.intime - interval '6 hours'
           and ce.charttime < it.intime + interval '1 day'
     group by ce.icustay_id
+),
+labevent_features as (
+    with intime as (
+        select
+            icu.intime,
+            icu.hadm_id
+        from icustays icu
+    )
+    select
+        le.hadm_id, --id
+
+        avg(case when le.itemid = 50912 then le.valuenum end) as avg_creatinine,
+        avg(case when le.itemid = 51006 then le.valuenum end) as avg_bun,
+        avg(case when le.itemid = 51301 then le.valuenum end) as avg_wbc,
+        avg(case when le.itemid = 51222 then le.valuenum end) as avg_hemoglobin,
+        avg(case when le.itemid = 51265 then le.valuenum end) as avg_platelets,
+        avg(case when le.itemid = 50983 then le.valuenum end) as avg_sodium,
+        avg(case when le.itemid = 50971 then le.valuenum end) as avg_potassium,
+        avg(case when le.itemid = 50931 then le.valuenum end) as avg_glucose,
+        avg(case when le.itemid = 50813 then le.valuenum end) as avg_lactate
+
+    from labevents le
+    join intime it
+        on le.hadm_id = it.hadm_id
+    where le.itemid in (
+        50912, --creatinine
+        51006, --BUN (Blood Urea Nitrogen)
+        51301, --WBC (White Blood Cell Count)
+        51222, --hemoglobin
+        51265, --platelets
+        50983, --sodium
+        50971, --potassium
+        50931, --glucose
+        50813 --lactate
+        )
+        and le.charttime >= it.intime - interval '6 hours'
+        and le.charttime < it.intime + interval '1 day'
+    group by le.hadm_id
 )
 select
     af.hospital_expire_flag, --flag
@@ -103,12 +144,24 @@ select
 
     isf.first_careunit,
 
+    --vitals
     cef.avg_heart_rate,
     cef.avg_systolic_bp,
     cef.avg_diastolic_bp,
     cef.avg_respiratory_rate,
     cef.avg_body_temp,
     cef.avg_spo2,
+
+    --labs
+    lef.avg_creatinine,
+    lef.avg_bun,
+    lef.avg_wbc,
+    lef.avg_hemoglobin,
+    lef.avg_platelets,
+    lef.avg_sodium,
+    lef.avg_potassium,
+    lef.avg_glucose,
+    lef.avg_lactate,
 
     --CALCULATED INFO--
     extract(year from age(af.admittime::date, pf.dob::date)) as age --TO-DO patients age>89 have dob shifted?
@@ -119,3 +172,5 @@ join icustays_features isf
     on isf.hadm_id = af.hadm_id
 join chartevent_features cef
     on cef.icustay_id = isf.icustay_id
+join labevent_features lef
+    on lef.hadm_id = af.hadm_id

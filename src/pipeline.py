@@ -19,10 +19,7 @@ from sklearn.model_selection import train_test_split, StratifiedGroupKFold
 
 pipeline_logger = get_logger(__name__)
 
-
-
-numeric_features = [
-    "age",
+vitals = [
     "avg_heart_rate",
     "avg_systolic_bp",
     "avg_diastolic_bp",
@@ -30,6 +27,20 @@ numeric_features = [
     "avg_body_temp",
     "avg_spo2"
 ]
+labs = [
+    "avg_creatinine",
+    "avg_bun",
+    "avg_wbc",
+    "avg_hemoglobin",
+    "avg_platelets",
+    "avg_sodium",
+    "avg_potassium",
+    "avg_glucose",
+    "avg_lactate"
+]
+
+numeric_features = ["age"] + vitals + labs
+
 categorical_features = [
     "marital_status",
     "religion",
