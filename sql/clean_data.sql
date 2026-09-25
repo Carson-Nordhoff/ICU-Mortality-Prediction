@@ -39,6 +39,7 @@ icustays_features as (
     select
         icu.hadm_id, --id
         icu.icustay_id, --id
+        icu.subject_id, --id
 
         icu.intime, --for calcs
 
@@ -98,6 +99,7 @@ chartevent_features as (
     group by ce.icustay_id
 ),
 labevent_features as (
+    --region intime cte
     with intime as (
         select
             icu.intime,
@@ -105,6 +107,8 @@ labevent_features as (
             icu.icustay_id
         from icustays icu
     )
+    --endregion
+    --region select
     select
         it.icustay_id, --id
 
@@ -117,10 +121,11 @@ labevent_features as (
         avg(case when le.itemid = 50971 then le.valuenum end) as avg_potassium,
         avg(case when le.itemid = 50931 then le.valuenum end) as avg_glucose,
         avg(case when le.itemid = 50813 then le.valuenum end) as avg_lactate
-
+    --endregion
     from labevents le
     join intime it
         on le.hadm_id = it.hadm_id
+    --region where
     where le.itemid in (
         50912, --creatinine
         51006, --BUN (Blood Urea Nitrogen)
@@ -134,6 +139,7 @@ labevent_features as (
         )
         and le.charttime >= it.intime - interval '6 hours'
         and le.charttime < it.intime + interval '1 day'
+    --endregion
     group by it.icustay_id
 )
 select
@@ -174,12 +180,12 @@ select
         when extract(year from age(isf.intime::date, pf.dob::date)) > 89 then 91.4
         else extract(year from age(isf.intime::date, pf.dob::date))
     end as age
-from admission_features af
-join patient_features pf
-    on af.subject_id = pf.subject_id
-join icustays_features isf
-    on isf.hadm_id = af.hadm_id
+from icustays_features isf
 join chartevent_features cef
     on cef.icustay_id = isf.icustay_id
 join labevent_features lef
     on lef.icustay_id = isf.icustay_id
+join patient_features pf
+    on pf.subject_id = isf.subject_id
+join admission_features af
+    on af.hadm_id = isf.hadm_id
