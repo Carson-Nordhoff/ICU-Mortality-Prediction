@@ -74,7 +74,7 @@ chartevent_features as (
         avg(
             case
                 when ce.itemid in (676, 223762) then ce.valuenum --celcius
-                when ce.itemid in (678, 223761) then (ce.valuenum-32)*(5/9) --convert fahrenheit to calcius
+                when ce.itemid in (678, 223761) then (ce.valuenum-32)*(5.0/9) --convert fahrenheit to calcius
             end
         ) as avg_body_temp,
 
