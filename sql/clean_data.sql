@@ -101,11 +101,12 @@ labevent_features as (
     with intime as (
         select
             icu.intime,
-            icu.hadm_id
+            icu.hadm_id,
+            icu.icustay_id
         from icustays icu
     )
     select
-        le.hadm_id, --id
+        it.icustay_id, --id
 
         avg(case when le.itemid = 50912 then le.valuenum end) as avg_creatinine,
         avg(case when le.itemid = 51006 then le.valuenum end) as avg_bun,
@@ -133,7 +134,7 @@ labevent_features as (
         )
         and le.charttime >= it.intime - interval '6 hours'
         and le.charttime < it.intime + interval '1 day'
-    group by le.hadm_id
+    group by it.icustay_id
 )
 select
     af.hospital_expire_flag, --flag
@@ -181,4 +182,4 @@ join icustays_features isf
 join chartevent_features cef
     on cef.icustay_id = isf.icustay_id
 join labevent_features lef
-    on lef.hadm_id = af.hadm_id
+    on lef.icustay_id = isf.icustay_id
