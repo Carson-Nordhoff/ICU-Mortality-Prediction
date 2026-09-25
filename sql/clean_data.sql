@@ -40,6 +40,8 @@ icustays_features as (
         icu.hadm_id, --id
         icu.icustay_id, --id
 
+        icu.intime, --for calcs
+
         icu.first_careunit
     from icustays icu
 ),
@@ -167,7 +169,10 @@ select
     lef.avg_lactate,
 
     --CALCULATED INFO--
-    extract(year from age(af.admittime::date, pf.dob::date)) as age --TO-DO patients age>89 have dob shifted?
+    case
+        when extract(year from age(isf.intime::date, pf.dob::date)) > 89 then 91.4
+        else extract(year from age(isf.intime::date, pf.dob::date))
+    end as age
 from admission_features af
 join patient_features pf
     on af.subject_id = pf.subject_id
