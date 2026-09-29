@@ -1,8 +1,12 @@
 --Maintain a ~24hr time cutoff for patients to prevent temporal leakage
 --Add several features/tables
 
+alter table admissions
+      alter column deathtime type timestamp using deathtime::timestamp;
+
 alter table icustays
-    alter column intime type timestamp using intime::timestamp;
+    alter column intime type timestamp using intime::timestamp,
+    alter column outtime type timestamp using outtime::timestamp;
 
 alter table chartevents
     alter column charttime type timestamp using charttime::timestamp;
@@ -16,7 +20,7 @@ with admission_features as (
         a.hadm_id, --id
         a.subject_id, --id
 
-        a.hospital_expire_flag, --flag
+        a.deathtime, --for flag calc
         a.marital_status,
         a.religion,
         a.language,
@@ -42,6 +46,7 @@ icustays_features as (
         icu.subject_id, --id
 
         icu.intime, --for calcs
+        icu.outtime, --for calcs
 
         icu.first_careunit
     from icustays icu
@@ -143,7 +148,10 @@ labevent_features as (
     group by it.icustay_id
 )
 select
-    af.hospital_expire_flag, --flag
+    case
+        when af.deathtime between isf.intime and (isf.outtime + interval '2 hours') then 1
+        else 0
+    end as icu_expire_flag, --flag
     af.subject_id, --id
 
     af.marital_status,

@@ -67,12 +67,12 @@ def pipeline():
     pipeline_logger.info(df.head())
     pipeline_logger.info(f'Missingness per column:\n {df.isnull().mean().round(3)}')
 
-    X = df.drop(columns=['hospital_expire_flag'])
-    y = df['hospital_expire_flag']
+    X = df.drop(columns=['icu_expire_flag'])
+    y = df['icu_expire_flag']
     groups = df['subject_id']
 
-    pipeline_logger.info(f'Class balance for hospital_expire_flag: {y.value_counts().to_dict()}')
-    pipeline_logger.info(f'Percentile balance for hospital_expire_flag: {y.value_counts(normalize=True).round(3).to_dict()}')
+    pipeline_logger.info(f'Class balance for icu_expire_flag: {y.value_counts().to_dict()}')
+    pipeline_logger.info(f'Percentile balance for icu_expire_flag: {y.value_counts(normalize=True).round(3).to_dict()}')
 
     sgkf = StratifiedGroupKFold(n_splits=3, shuffle=True, random_state=42)
 
