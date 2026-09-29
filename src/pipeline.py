@@ -1,14 +1,15 @@
 #MODEL TO-DO#
+from sklearn import model_selection
 
 #Handle mortality class imbalance
 #Adjust system to multiple model analysis for optimal model
 
-from utils.read_yaml import model_selection_yaml
 from src.data import clean_data
 from src.data.load_data import load_data, inspect_data, insert_raw_data, load_clean_mimic_data
 from src.data.clean_data import clean_data
 from src.models.train_model import get_preprocessor
 from src.models.evaluate import evaluate
+from src.models.model_selection import best_model_from_folds
 from src.models.save_model import save_model, load_model
 
 from utils.directories import ensure_directories
@@ -53,8 +54,6 @@ categorical_features = [
 binary_features = []
 
 def pipeline():
-
-    model_config = model_selection_yaml()
 
     ensure_directories()
 
@@ -118,10 +117,10 @@ def pipeline():
             'roc_auc': roc_auc
         }
 
-    dummy_model = models[0]
+    best_model = best_model_from_folds(models)
 
-    save_model(dummy_model, 0)
-    dummy_model = load_model(0)
+    save_model(best_model)
+    best_model = load_model()
 
 if __name__ == "__main__":
     pipeline()
