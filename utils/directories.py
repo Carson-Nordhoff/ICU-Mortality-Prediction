@@ -28,6 +28,9 @@ PIPELINE_LOG_DIR = LOG_DIR / "pipeline_logs.log"
 MODELS_DIR = ARTIFACT_DIR / "models"
 TRAINED_MODEL = MODELS_DIR / "trained_model.pkl"
 
+CONFIGS_DIR = ROOT_DIR / "configs"
+MODEL_SELECTION_YAML = CONFIGS_DIR / "model_selection.yaml"
+
 def ensure_directories():
 
     for dir in [RAW_DATA_DIR]:

@@ -1,0 +1,5 @@
+primary_metric: recall
+
+thresholds:
+  recall:
+    min: 0.200

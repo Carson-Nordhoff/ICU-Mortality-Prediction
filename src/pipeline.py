@@ -3,6 +3,7 @@
 #Handle mortality class imbalance
 #Adjust system to multiple model analysis for optimal model
 
+from utils.read_yaml import model_selection_yaml
 from src.data import clean_data
 from src.data.load_data import load_data, inspect_data, insert_raw_data, load_clean_mimic_data
 from src.data.clean_data import clean_data
@@ -52,6 +53,8 @@ categorical_features = [
 binary_features = []
 
 def pipeline():
+
+    model_config = model_selection_yaml()
 
     ensure_directories()
 
