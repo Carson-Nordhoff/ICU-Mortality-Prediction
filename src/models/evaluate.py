@@ -37,7 +37,13 @@ def evaluate(y_test, y_preds, y_probas):
     #plot_calibration(y_test, y_probas)
 
     evaluate_logger.info(
-        f"Accuracy: {acc:.3f} | Precision: {precision:.3f} | Recall: {recall:.3f} | F1 Score: {f1:.3f} | Average Precision: {avg_precision:.3f} | ROC AUC: {roc_auc:.3f} | Brier Score: {brier_score:.3f} |"
+        f"Accuracy: {acc:.3f} | "
+        f"Precision: {precision:.3f} | "
+        f"Recall: {recall:.3f} | "
+        f"F1 Score: {f1:.3f} | "
+        f"Average Precision: {avg_precision:.3f} | "
+        f"ROC AUC: {roc_auc:.3f} | "
+        f"Brier Score: {brier_score:.3f} |"
     )
 
     return acc, precision, recall, f1, avg_precision, roc_auc, brier_score

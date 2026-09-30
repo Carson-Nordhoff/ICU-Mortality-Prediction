@@ -24,7 +24,13 @@ def best_model_from_folds(models):
     model_selection_logger.info(f"----------BEST MODEL----------")
     model_selection_logger.info(f"Best model on fold: {max_recall_fold}")
     model_selection_logger.info(
-        f"Accuracy: {max_recall_model["acc"]:.3f} | Precision: {max_recall_model["precision"]:.3f} | Recall: {max_recall_model["recall"]:.3f} | F1 Score: {max_recall_model["f1"]:.3f} | Average Precision: {max_recall_model["avg_precision"]:.3f} | ROC AUC: {max_recall_model["roc_auc"]:.3f} | Brier Score: {max_recall_model["brier_score"]:.3f} |"
+        f"Accuracy: {max_recall_model["acc"]:.3f} | "
+        f"Precision: {max_recall_model["precision"]:.3f} | "
+        f"Recall: {max_recall_model["recall"]:.3f} | "
+        f"F1 Score: {max_recall_model["f1"]:.3f} | "
+        f"Average Precision: {max_recall_model["avg_precision"]:.3f} | "
+        f"ROC AUC: {max_recall_model["roc_auc"]:.3f} | "
+        f"Brier Score: {max_recall_model["brier_score"]:.3f} |"
     )
 
     return max_recall_model
