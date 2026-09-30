@@ -105,7 +105,7 @@ def pipeline():
         preds = clf.predict(X_test)
         probs = clf.predict_proba(X_test)[:, 1]
 
-        acc, precision, recall, f1, avg_precision, roc_auc = evaluate(y_test, preds, probs)
+        acc, precision, recall, f1, avg_precision, roc_auc, brier_score = evaluate(y_test, preds, probs)
 
         models[fold] = {
             'model': clf,
@@ -114,7 +114,8 @@ def pipeline():
             'recall': recall,
             'f1': f1,
             'avg_precision': avg_precision,
-            'roc_auc': roc_auc
+            'roc_auc': roc_auc,
+            'brier_score': brier_score
         }
 
     best_model = best_model_from_folds(models)
