@@ -48,6 +48,8 @@ icustays_features as (
         icu.intime, --for calcs
         icu.outtime, --for calcs
 
+        icu.los, --for 24hr time sorting
+
         icu.first_careunit
     from icustays icu
 ),
@@ -149,7 +151,7 @@ labevent_features as (
 )
 select
     case
-        when af.deathtime between isf.intime and (isf.outtime + interval '2 hours') then 1
+        when af.deathtime between (isf.intime + interval '1 day') and (isf.outtime + interval '2 hours') then 1
         else 0
     end as icu_expire_flag, --flag
     af.subject_id, --id
@@ -197,3 +199,6 @@ join patient_features pf
     on pf.subject_id = isf.subject_id
 join admission_features af
     on af.hadm_id = isf.hadm_id
+where isf.los >= 1
+       and ((af.deathtime >= isf.intime + interval '1 day')
+       or af.deathtime is null)
