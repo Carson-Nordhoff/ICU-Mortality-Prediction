@@ -1,3 +1,6 @@
+-- Add missingness checks for all data (including missing labs and chart events)
+-- potentially add missingness flag for missing data.
+
 alter table admissions
       alter column deathtime type timestamp using deathtime::timestamp;
 
@@ -188,9 +191,9 @@ select
         else extract(year from age(isf.intime::date, pf.dob::date))
     end as age
 from icustays_features isf
-join chartevent_features cef
+left join chartevent_features cef
     on cef.icustay_id = isf.icustay_id
-join labevent_features lef
+left join labevent_features lef
     on lef.icustay_id = isf.icustay_id
 join patient_features pf
     on pf.subject_id = isf.subject_id
