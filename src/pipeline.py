@@ -53,7 +53,8 @@ categorical_features = [
     "language",
     "insurance",
     "admission_type",
-    "first_careunit"
+    "first_careunit",
+    "gender"
 ]
 binary_features = []
 
