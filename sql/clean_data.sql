@@ -1,6 +1,3 @@
---Maintain a ~24hr time cutoff for patients to prevent temporal leakage
---Add several features/tables
-
 alter table admissions
       alter column deathtime type timestamp using deathtime::timestamp;
 

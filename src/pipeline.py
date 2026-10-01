@@ -1,5 +1,4 @@
 #MODEL TO-DO#
-from sklearn import model_selection
 
 #Handle mortality class imbalance
 #Adjust system to multiple model analysis for optimal model
@@ -22,7 +21,7 @@ from utils.logger import get_logger
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
-from sklearn.model_selection import train_test_split, StratifiedGroupKFold
+from sklearn.model_selection import StratifiedGroupKFold
 
 pipeline_logger = get_logger(__name__)
 
