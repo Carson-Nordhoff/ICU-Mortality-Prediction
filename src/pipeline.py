@@ -110,7 +110,7 @@ def pipeline():
         preds = clf.predict(X_test)
         probs = clf.predict_proba(X_test)[:, 1]
 
-        acc, precision, recall, f1, avg_precision, roc_auc, brier_score = evaluate(y_test, preds, probs)
+        acc, precision, recall, f1, avg_precision, roc_auc, brier_score = evaluate(y_test, preds, probs, fold)
 
         models[fold] = {
             'model': clf,

@@ -26,7 +26,10 @@ LOG_DIR = ARTIFACT_DIR / "logs"
 
 PIPELINE_LOG_DIR = LOG_DIR / "pipeline_logs.log"
 MODELS_DIR = ARTIFACT_DIR / "models"
+METRICS_DIR = ARTIFACT_DIR / "metrics"
+
 TRAINED_MODEL = MODELS_DIR / "trained_model.pkl"
+TRAINED_METRICS_DIR = METRICS_DIR / "metrics.json"
 
 CONFIGS_DIR = ROOT_DIR / "configs"
 MODEL_SELECTION_YAML = CONFIGS_DIR / "model_selection.yaml"
