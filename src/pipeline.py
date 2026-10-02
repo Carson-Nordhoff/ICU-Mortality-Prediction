@@ -125,8 +125,14 @@ def pipeline():
 
     best_model = best_model_from_folds(models)
 
-    save_model(best_model)
-    best_model = load_model()
+    final_clf = clf = Pipeline(steps=[
+            ('preprocessor', get_preprocessor(numeric_features, categorical_features)),
+            (f'classifier', LogisticRegression(class_weight='balanced'))
+    ])
+    final_clf.fit(X, y)
+
+    save_model(final_clf)
+    load_check = load_model()
 
 if __name__ == "__main__":
     pipeline()
