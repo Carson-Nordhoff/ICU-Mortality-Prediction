@@ -108,7 +108,7 @@ def pipeline():
 
         clf = Pipeline(steps=[
             ('preprocessor', preprocessor),
-            (f'classifier', LogisticRegression(class_weight='balanced'))
+            (f'classifier', LogisticRegression(max_iter=1000, class_weight='balanced'))
         ])
 
         clf.fit(X_train, y_train)
