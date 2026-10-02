@@ -23,6 +23,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import StratifiedGroupKFold
 
+import io
+
 pipeline_logger = get_logger(__name__)
 
 vitals = [
@@ -70,8 +72,12 @@ def pipeline():
     clean_data()
     df = load_clean_mimic_data()
 
-    pipeline_logger.info(df.info())
+    buffer = io.StringIO()
+    df.info(buf=buffer)
+    df_info_str = buffer.getvalue()
+    pipeline_logger.info("DataFrame Info:\n%s", df_info_str)
     pipeline_logger.info(df.head())
+
     pipeline_logger.info(f'Missingness per column:\n {df.isnull().mean().round(3)}')
 
     X = df.drop(columns=['icu_expire_flag'])
