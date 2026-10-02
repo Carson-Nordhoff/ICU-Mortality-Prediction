@@ -4,7 +4,6 @@ from sqlalchemy import create_engine
 from utils.db_config import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
 from pathlib import Path
 import pandas as pd
-import os
 
 data_logger = get_logger(__name__)
 

@@ -3,7 +3,6 @@
 #Handle mortality class imbalance
 #Adjust system to multiple model analysis for optimal model
 
-from src.data import clean_data
 from src.data.load_data import (
     load_data,
     inspect_data,
