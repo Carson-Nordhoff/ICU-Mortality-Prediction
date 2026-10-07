@@ -130,7 +130,7 @@ def pipeline():
 
     best_model = best_model_from_folds(models)
 
-    final_clf = clf = Pipeline(steps=[
+    final_clf = Pipeline(steps=[
             ('preprocessor', get_preprocessor(numeric_features, categorical_features)),
             (f'classifier', LogisticRegression(class_weight='balanced'))
     ])

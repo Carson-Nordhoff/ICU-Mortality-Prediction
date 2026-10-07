@@ -1,8 +1,25 @@
-#ignore all data
+#ignore all data, keep folder
 data/*
-
-#keep empty data folder
 !data/.gitkeep
+
+#ignore all artifacts, keep folders
+!artifacts/.gitkeep
+
+!artifacts/logs/
+!artifacts/metrics/
+!artifacts/models/
+
+artifacts/logs/*
+artifacts/metrics/*
+artifacts/models/*
+
+!artifacts/logs/.gitkeep
+!artifacts/metrics/.gitkeep
+!artifacts/models/.gitkeep
 
 #ignore the environment variables
 .env
+
+#ignore any scratch files
+src/scratch.py
+sql/scratch.sql
