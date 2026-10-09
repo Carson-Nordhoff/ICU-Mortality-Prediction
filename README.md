@@ -153,7 +153,7 @@ Containerization with Docker is a planned improvement of this project to avoid m
 2. Unzip the MIMIC-III csv files into the main data folder (ICU-Mortality-Prediction/data)
 3. Run these lines of code in succession:
 cd ICU-Mortality-Prediction
-pip install -r requirements.txt
+pip install -r requirements
 python src/pipeline.py
 
 ### Postgres 18.6
