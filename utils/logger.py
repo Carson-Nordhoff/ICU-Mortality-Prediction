@@ -1,9 +1,14 @@
 import logging
 from logging.handlers import RotatingFileHandler
 
-from utils.directories import PIPELINE_LOG_DIR
+from pathlib import Path
+
+from utils.directories import ARTIFACT_DIR, LOG_DIR, PIPELINE_LOG_DIR
 
 def get_logger(name):
+
+    Path(ARTIFACT_DIR).mkdir(parents=True, exist_ok=True)
+    Path(LOG_DIR).mkdir(parents=True, exist_ok=True)
 
     logger = logging.getLogger(name)
 

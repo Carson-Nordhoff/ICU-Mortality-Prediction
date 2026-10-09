@@ -36,5 +36,5 @@ MODEL_SELECTION_YAML = CONFIGS_DIR / "model_selection.yaml"
 
 def ensure_directories():
 
-    for dir in [RAW_DATA_DIR]:
+    for dir in [RAW_DATA_DIR, ARTIFACT_DIR, LOG_DIR, MODELS_DIR, METRICS_DIR]:
         Path(dir).mkdir(parents=True, exist_ok=True)
