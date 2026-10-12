@@ -1,3 +1,6 @@
+#TO-DO Explicit data type given when reading CSVs to avoid multiple-datatype error
+#instead of low_memory = False?
+
 from utils.directories import CSV_DIRS
 from utils.logger import get_logger
 from sqlalchemy import create_engine
@@ -22,7 +25,7 @@ def load_data():
     for csv_dir in CSV_DIRS:
 
         data_logger.info(f"Successfully loaded {csv_dir}")
-        df = pd.read_csv(csv_dir)
+        df = pd.read_csv(csv_dir, low_memory=False)
         df.columns = df.columns.str.lower()
         csv_name = Path(csv_dir).stem.lower()
         raw_data[csv_name] = df
