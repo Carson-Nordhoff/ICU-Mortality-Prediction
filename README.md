@@ -159,14 +159,15 @@ Containerization with Docker is a planned improvement of this project to avoid m
 2. Click 'Windows'
 3. Click the red 'Download the Installer' text
 4. For the row that says '18.6' as the PostgreSQL Version and Windows x86-64, click the download icon.
-5. Run 'createdb mimic3' in a terminal
+5. Run 'createdb -U postgres mimic3' in a terminal
 
 ### Environment Setup
 Once the repo is cloned there will be a file named '.env.example'. Rename this to '.env'
 Then replace 'yourusername' and 'yourpassword' with said variables you created while installing Postgres 18.6
 
 ### Run System
-Run these three lines of code in the IDE terminal in succession:
+Run these three lines of code in the IDE terminal in succession.
+You may not need to run 'cd ICU-Mortality-Prediction' if you are already in the directory:
 cd ICU-Mortality-Prediction
 pip install -r requirements
 python -m src.pipeline
