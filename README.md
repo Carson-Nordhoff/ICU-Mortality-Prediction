@@ -16,8 +16,10 @@ of help to identify at risk patients to provide extra care.
 - [Repo Structure](#repository-structure)
 - [System Requirements](#system-requirements)
 - [Installation & Setup](#installation--setup)
-  - [Postgres 18.6](#postgres-186)
   - [Repository](#repository)
+  - [Postgres 18.6](#postgres-186)
+  - [Environment Setup](#environment-setup)
+  - [Run System](#run-system)
 - [Disclaimer](#disclaimer)
 
 ## Project Overview
@@ -151,10 +153,6 @@ Containerization with Docker is a planned improvement of this project to avoid m
 ### Repository
 1. Clone the repo using 'git clone https://github.com/Carson-Nordhoff/ICU-Mortality-Prediction.git'
 2. Unzip the MIMIC-III csv files into the main data folder (ICU-Mortality-Prediction/data)
-3. Run these lines of code in succession:
-cd ICU-Mortality-Prediction
-pip install -r requirements
-python src/pipeline.py
 
 ### Postgres 18.6
 1. Go to the [installer](https://www.postgresql.org/download/)
@@ -166,6 +164,12 @@ python src/pipeline.py
 ### Environment Setup
 Once the repo is cloned there will be a file named '.env.example'. Rename this to '.env'
 Then replace 'yourusername' and 'yourpassword' with said variables you created while installing Postgres 18.6
+
+### Run System
+Run these three lines of code in the IDE terminal in succession:
+cd ICU-Mortality-Prediction
+pip install -r requirements
+python -m src.pipeline
 
 ## Disclaimer
 This system is meant as a proof-of-concept and is not intended for clinical use.
