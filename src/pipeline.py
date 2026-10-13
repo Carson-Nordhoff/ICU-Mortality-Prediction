@@ -11,6 +11,7 @@ from src.data.load_data import (
 )
 from src.data.clean_data import build_icu_table
 from src.models.train_model import get_preprocessor
+from src.models.get_model import MODELS, get_model
 from src.models.evaluate import evaluate
 from src.models.model_selection import best_model_from_folds
 from src.models.save_model import save_model, load_model
@@ -18,7 +19,6 @@ from src.models.save_model import save_model, load_model
 from utils.directories import ensure_directories
 from utils.logger import get_logger
 
-from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import StratifiedGroupKFold
 
@@ -81,6 +81,8 @@ def pipeline():
 
     X = df.drop(columns=['icu_expire_flag'])
     y = df['icu_expire_flag']
+    all_data_scale_pos_weight = sum(y == 0) / sum(y == 1)
+
     groups = df['subject_id']
 
     pipeline_logger.info(f'Class balance for icu_expire_flag: {y.value_counts().to_dict()}')
@@ -100,39 +102,45 @@ def pipeline():
         pipeline_logger.info(f'Train balance: {y_train.value_counts(normalize=True).round(3).to_dict()}')
         pipeline_logger.info(f'Test balance: {y_test.value_counts(normalize=True).round(3).to_dict()}')
 
+        scale_pos_weight = sum(y_train == 0) / sum(y_train == 1)
+
         train_subjects = set(groups.iloc[train_idx])
         test_subjects = set(groups.iloc[test_idx])
         assert train_subjects.isdisjoint(test_subjects), f"Leaked subject_ids across train/test"
 
         preprocessor = get_preprocessor(numeric_features, categorical_features)
 
-        clf = Pipeline(steps=[
-            ('preprocessor', preprocessor),
-            (f'classifier', LogisticRegression(max_iter=1000, class_weight='balanced'))
-        ])
+        for model_name in MODELS:
 
-        clf.fit(X_train, y_train)
-        preds = clf.predict(X_test)
-        probs = clf.predict_proba(X_test)[:, 1]
+            clf = Pipeline(steps=[
+                ('preprocessor', preprocessor),
+                (model_name, get_model(model_name, scale_pos_weight))
+            ])
 
-        acc, precision, recall, f1, avg_precision, roc_auc, brier_score = evaluate(y_test, preds, probs, fold)
+            clf.fit(X_train, y_train)
+            preds = clf.predict(X_test)
+            probs = clf.predict_proba(X_test)[:, 1]
 
-        models[fold] = {
-            'model': clf,
-            'acc': acc,
-            'precision': precision,
-            'recall': recall,
-            'f1': f1,
-            'avg_precision': avg_precision,
-            'roc_auc': roc_auc,
-            'brier_score': brier_score
-        }
+            acc, precision, recall, f1, avg_precision, roc_auc, brier_score = evaluate(y_test, preds, probs, fold)
 
-    best_model = best_model_from_folds(models)
+            models = {
+                (fold, model_name): {
+                    'clf': clf,
+                    'acc': acc,
+                    'precision': precision,
+                    'recall': recall,
+                    'f1': f1,
+                    'avg_precision': avg_precision,
+                    'roc_auc': roc_auc,
+                    'brier_score': brier_score
+                }
+            }
+
+    best_model_name = best_model_from_folds(models)
 
     final_clf = Pipeline(steps=[
             ('preprocessor', get_preprocessor(numeric_features, categorical_features)),
-            (f'classifier', LogisticRegression(class_weight='balanced'))
+            (f'classifier', get_model(best_model_name, all_data_scale_pos_weight))
     ])
     final_clf.fit(X, y)
 

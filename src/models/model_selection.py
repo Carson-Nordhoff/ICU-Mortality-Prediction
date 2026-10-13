@@ -5,24 +5,24 @@ model_selection_logger = get_logger(__name__)
 
 selection_config = model_selection_yaml()
 
-def best_model_from_folds(models):
+def best_model_from_folds(trained_models : dict[tuple[int, str], dict]):
 
     candidates = {}
 
-    for fold, model in models.items():
+    for (fold, name), clf in trained_models.items():
 
-        if model["recall"] >= selection_config["thresholds"]["recall"]["min"]:
-            candidates[fold] = model
+        if clf["recall"] >= selection_config["thresholds"]["recall"]["min"]:
+            candidates[(fold, name)] = clf
 
     if not candidates:
         model_selection_logger.info("No model passed minimum thresholds.")
         raise ValueError("No model passed minimum thresholds.")
 
-    max_recall_fold = max(models, key=lambda k: models[k]["recall"])
-    max_recall_model = candidates[max_recall_fold]
+    max_recall_key = max(trained_models, key=lambda k: trained_models[k]["recall"])
+    max_recall_model = candidates[max_recall_key]
 
     model_selection_logger.info(f"----------BEST MODEL----------")
-    model_selection_logger.info(f"Best model on fold: {max_recall_fold}")
+    model_selection_logger.info(f"Best model on fold: {max_recall_key}")
     model_selection_logger.info(
         f"Accuracy: {max_recall_model["acc"]:.3f} | "
         f"Precision: {max_recall_model["precision"]:.3f} | "
@@ -33,4 +33,4 @@ def best_model_from_folds(models):
         f"Brier Score: {max_recall_model["brier_score"]:.3f} |"
     )
 
-    return max_recall_model
+    return max_recall_key[0]
