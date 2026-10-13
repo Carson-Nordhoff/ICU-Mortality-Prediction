@@ -19,7 +19,8 @@ CSV_DIRS = [
     LABEVENTS]
 
 SQL_DIR = ROOT_DIR / "sql"
-SQL_CODE = SQL_DIR / "clean_data.sql"
+ALTER_TABLES = SQL_DIR / "alter_tables.sql"
+CLEAN_DATA = SQL_DIR / "clean_data.sql"
 
 ARTIFACT_DIR = ROOT_DIR / "artifacts"
 LOG_DIR = ARTIFACT_DIR / "logs"

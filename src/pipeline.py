@@ -9,7 +9,7 @@ from src.data.load_data import (
     insert_raw_data,
     load_clean_mimic_data
 )
-from src.data.clean_data import clean_data
+from src.data.clean_data import build_icu_table
 from src.models.train_model import get_preprocessor
 from src.models.evaluate import evaluate
 from src.models.model_selection import best_model_from_folds
@@ -68,7 +68,7 @@ def pipeline():
 
     insert_raw_data(raw_data)
 
-    clean_data()
+    build_icu_table()
     df = load_clean_mimic_data()
 
     buffer = io.StringIO()

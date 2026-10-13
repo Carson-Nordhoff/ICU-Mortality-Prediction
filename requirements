@@ -3,6 +3,7 @@ pandas
 dotenv
 sqlalchemy
 psycopg[binary]
+psycopg_pool
 scikit-learn
 joblib
 pyyaml
