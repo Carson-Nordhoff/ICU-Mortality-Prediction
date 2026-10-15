@@ -140,7 +140,7 @@ def pipeline():
 
     final_clf = Pipeline(steps=[
             ('preprocessor', get_preprocessor(numeric_features, categorical_features)),
-            (f'classifier', get_model(best_model_name, all_data_scale_pos_weight))
+            ('classifier', get_model(best_model_name, all_data_scale_pos_weight))
     ])
     final_clf.fit(X, y)
 

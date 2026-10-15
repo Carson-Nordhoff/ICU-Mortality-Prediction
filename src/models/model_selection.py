@@ -5,7 +5,7 @@ model_selection_logger = get_logger(__name__)
 
 selection_config = model_selection_yaml()
 
-def best_model_from_folds(trained_models : dict[tuple[int, str], dict]):
+def best_model_from_folds(trained_models: dict[tuple[int, str], dict]) -> str:
 
     candidates = {}
 
@@ -33,4 +33,4 @@ def best_model_from_folds(trained_models : dict[tuple[int, str], dict]):
         f"Brier Score: {max_recall_model["brier_score"]:.3f} |"
     )
 
-    return max_recall_key[0]
+    return max_recall_key[1]

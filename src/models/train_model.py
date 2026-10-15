@@ -3,7 +3,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 
-def get_preprocessor(numeric_features, categorical_features):
+def get_preprocessor(numeric_features: list[str], categorical_features: list[str]) -> ColumnTransformer:
 
     categorical_transformer = Pipeline(steps=[
         ('imputer', SimpleImputer(strategy='most_frequent')),

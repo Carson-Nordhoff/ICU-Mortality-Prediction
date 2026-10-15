@@ -2,7 +2,7 @@ import psycopg
 from utils.directories import ALTER_TABLES, CLEAN_DATA
 from utils.db_config import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
 from utils.logger import get_logger
-
+from pathlib import Path
 from psycopg_pool import ConnectionPool
 
 clean_data_logger = get_logger(__name__)
@@ -14,7 +14,7 @@ pool = ConnectionPool(
     open=True
 )
 
-def clean_data(file_path):
+def clean_data(file_path: Path):
 
     clean_data_logger.info(f"Reading SQL code from {file_path}.")
 

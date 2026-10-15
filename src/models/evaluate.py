@@ -17,7 +17,7 @@ from sklearn.calibration import CalibrationDisplay, calibration_curve
 
 evaluate_logger = get_logger(__name__)
 
-def plot_calibration(y_test, y_probas):
+def plot_calibration(y_test: list[int], y_probas: list[float]):
 
     evaluate_logger.info("Calibration Diagram (Calibration Curve)")
     fig, ax = plt.subplots(figsize=(6, 6))
@@ -28,7 +28,17 @@ def plot_calibration(y_test, y_probas):
     plt.title("Reliability Diagram (Calibration Curve)")
     plt.show()
 
-def evaluate(y_test, y_preds, y_probas, fold):
+type SevenFloats = tuple[
+    float,
+    float,
+    float,
+    float,
+    float,
+    float,
+    float
+]
+
+def evaluate(y_test: list[int], y_preds: list[int], y_probas: list[float], fold: int) -> SevenFloats:
 
     acc = accuracy_score(y_test, y_preds)
     precision = precision_score(y_test, y_preds)

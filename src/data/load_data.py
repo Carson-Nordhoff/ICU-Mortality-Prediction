@@ -3,7 +3,7 @@
 
 from utils.directories import CSV_DIRS
 from utils.logger import get_logger
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, Engine
 from utils.db_config import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
 from pathlib import Path
 import pandas as pd
@@ -11,13 +11,13 @@ import pandas as pd
 data_logger = get_logger(__name__)
 
 #gets an sqlalchemy engine to interpret between python and sql
-def get_engine():
+def get_engine() -> Engine:
     return create_engine(
         f"postgresql+psycopg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     )
 
 #load data from raw csvs
-def load_data():
+def load_data() -> dict[str, pd.DataFrame]:
 
     raw_data = {}
 
@@ -33,14 +33,14 @@ def load_data():
     return raw_data
 
 #inspects head and info per csv
-def inspect_data(data):
+def inspect_data(data: dict[str, pd.DataFrame]):
     for raw_csv in data.values():
         data_logger.info(f"Data inspection for {raw_csv}")
         data_logger.info(raw_csv.head())
-        data_logger.info(raw_csv.info())
+        data_logger.info(raw_csv.info()) #is this function not returning anything?
 
 #inserts data into postgre
-def insert_raw_data(data):
+def insert_raw_data(data: dict[str, pd.DataFrame]):
 
     engine = get_engine()
     data_logger.info("Inserting data into mimic3 database.")
@@ -50,7 +50,7 @@ def insert_raw_data(data):
         raw_df.to_sql(df_name, engine, if_exists='replace', index=False)
         data_logger.info(f"{df_name} loaded successfully.")
 
-def load_clean_mimic_data():
+def load_clean_mimic_data() -> pd.DataFrame:
 
     engine = get_engine()
 
