@@ -4,8 +4,9 @@ from utils.logger import get_logger
 model_selection_logger = get_logger(__name__)
 
 selection_config = model_selection_yaml()
+num_models = selection_config["num_models_hyperparameter_tune"]
 
-def best_model_from_folds(trained_models: dict[tuple[int, str], dict]) -> str:
+def top_k_models(trained_models: dict[tuple[int, str], dict]) -> list[str]:
 
     candidates = {}
 
@@ -15,22 +16,14 @@ def best_model_from_folds(trained_models: dict[tuple[int, str], dict]) -> str:
             candidates[(fold, name)] = clf
 
     if not candidates:
-        model_selection_logger.info("No model passed minimum thresholds.")
+        model_selection_logger.critical("No model passed minimum thresholds.")
         raise ValueError("No model passed minimum thresholds.")
 
-    max_recall_key = max(trained_models, key=lambda k: trained_models[k]["recall"])
-    max_recall_model = candidates[max_recall_key]
+    if len(candidates) < num_models:
+        model_selection_logger.error(f"Not enough candidate models passed minimum thresholds. Expected: {num_models} Got: {len(candidates)}")
+        raise ValueError(f"Not enough candidate models passed minimum thresholds. Expected: {num_models} Got: {len(candidates)}")
 
-    model_selection_logger.info(f"----------BEST MODEL----------")
-    model_selection_logger.info(f"Best model on fold: {max_recall_key}")
-    model_selection_logger.info(
-        f"Accuracy: {max_recall_model["acc"]:.3f} | "
-        f"Precision: {max_recall_model["precision"]:.3f} | "
-        f"Recall: {max_recall_model["recall"]:.3f} | "
-        f"F1 Score: {max_recall_model["f1"]:.3f} | "
-        f"Average Precision: {max_recall_model["avg_precision"]:.3f} | "
-        f"ROC AUC: {max_recall_model["roc_auc"]:.3f} | "
-        f"Brier Score: {max_recall_model["brier_score"]:.3f} |"
-    )
+    top_k_performing_keys = sorted(candidates, key=lambda key: candidates[key]["recall"], reverse=True)[:num_models]
+    top_k_performance_models = [key[1] for key in top_k_performing_keys]
 
-    return max_recall_key[1]
+    return top_k_performance_models

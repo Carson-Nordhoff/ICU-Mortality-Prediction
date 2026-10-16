@@ -1,5 +1,7 @@
+num_models_hyperparameter_tune: 2
+
 primary_metric: recall
 
 thresholds:
   recall:
-    min: 0.200
+    min: 0.010

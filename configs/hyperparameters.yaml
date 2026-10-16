@@ -1,0 +1,42 @@
+logistic_regression:
+  solver:
+    - "saga"
+    - "lbfgs"
+  penalty:
+    - "l2"
+    - "l1"
+    - "elasticnet"
+  max_iter:
+    - 100
+    - 250
+    - 500
+
+random_forest:
+  n_estimators:
+    - 10
+    - 50
+    - 100
+    - 130
+  max_depth:
+    - 2
+    - 3
+    - 5
+  max_features:
+    - auto
+    - log2
+
+xgboost:
+  n_estimators:
+    - 10
+    - 50
+    - 100
+  learning_rate: 0.3
+  max_depth: 6
+  sub_sample: 1.0
+  colsample_bytree: 1.0
+  min_child_weight: 1
+  gamma: 0
+  reg_alpha: 0
+  reg_lambda: 1
+  scale_pos_weight: 1 #THIS IS CALCULATED
+  early_stopping_rounds: None

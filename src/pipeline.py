@@ -10,10 +10,10 @@ from src.data.load_data import (
     load_clean_mimic_data
 )
 from src.data.clean_data import build_icu_table
-from src.models.train_model import get_preprocessor
+from src.models.train import get_preprocessor, train_default_models
 from src.models.get_model import MODELS, get_model
 from src.models.evaluate import evaluate
-from src.models.model_selection import best_model_from_folds
+from src.models.model_selection import top_k_models
 from src.models.save_model import save_model, load_model
 
 from utils.directories import ensure_directories
@@ -23,6 +23,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import StratifiedGroupKFold
 
 import io
+
+from utils.read_yaml import hyper_parameter_yaml
 
 pipeline_logger = get_logger(__name__)
 
@@ -81,7 +83,7 @@ def pipeline():
 
     X = df.drop(columns=['icu_expire_flag'])
     y = df['icu_expire_flag']
-    all_data_scale_pos_weight = sum(y == 0) / sum(y == 1)
+    all_data_scale_pos_weight = sum(y == 0) / sum(y == 1) #don't remove need for commented out final pipeline
 
     groups = df['subject_id']
 
@@ -90,62 +92,27 @@ def pipeline():
 
     sgkf = StratifiedGroupKFold(n_splits=3, shuffle=True, random_state=42)
 
-    models = {}
+    default_models = train_default_models(X, y, groups, sgkf, numeric_features, categorical_features)
 
-    for fold, (train_idx, test_idx) in enumerate(sgkf.split(X, y, groups)):
+    top_models = top_k_models(default_models)
+    pipeline_logger.info(f'top models: {top_models}')
 
-        pipeline_logger.info(f'----------Fold: {fold}----------')
+    #IN THE MIDDLE OF IMPLEMENTING HYPERPARAMETER TUNING
 
-        X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
-        y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
+    #FIRST PASS DONE: Get top k performing models on baseline
+    #SECOND PASS: General hypertune top k models to get best model
+    #THIRD PASS: Large compute hypertune search for best model
 
-        pipeline_logger.info(f'Train balance: {y_train.value_counts(normalize=True).round(3).to_dict()}')
-        pipeline_logger.info(f'Test balance: {y_test.value_counts(normalize=True).round(3).to_dict()}')
 
-        scale_pos_weight = sum(y_train == 0) / sum(y_train == 1)
-
-        train_subjects = set(groups.iloc[train_idx])
-        test_subjects = set(groups.iloc[test_idx])
-        assert train_subjects.isdisjoint(test_subjects), f"Leaked subject_ids across train/test"
-
-        preprocessor = get_preprocessor(numeric_features, categorical_features)
-
-        for model_name in MODELS:
-
-            clf = Pipeline(steps=[
-                ('preprocessor', preprocessor),
-                (model_name, get_model(model_name, scale_pos_weight))
-            ])
-
-            clf.fit(X_train, y_train)
-            preds = clf.predict(X_test)
-            probs = clf.predict_proba(X_test)[:, 1]
-
-            acc, precision, recall, f1, avg_precision, roc_auc, brier_score = evaluate(y_test, preds, probs, fold)
-
-            models = {
-                (fold, model_name): {
-                    'clf': clf,
-                    'acc': acc,
-                    'precision': precision,
-                    'recall': recall,
-                    'f1': f1,
-                    'avg_precision': avg_precision,
-                    'roc_auc': roc_auc,
-                    'brier_score': brier_score
-                }
-            }
-
-    best_model_name = best_model_from_folds(models)
-
-    final_clf = Pipeline(steps=[
-            ('preprocessor', get_preprocessor(numeric_features, categorical_features)),
-            ('classifier', get_model(best_model_name, all_data_scale_pos_weight))
-    ])
-    final_clf.fit(X, y)
-
-    save_model(final_clf)
-    load_check = load_model()
+    #
+    # final_clf = Pipeline(steps=[
+    #         ('preprocessor', get_preprocessor(numeric_features, categorical_features)),
+    #         ('classifier', get_model(best_model_name, all_data_scale_pos_weight))
+    # ])
+    # final_clf.fit(X, y)
+    #
+    # save_model(final_clf)
+    # load_check = load_model()
 
 if __name__ == "__main__":
     pipeline()

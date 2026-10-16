@@ -1,6 +1,6 @@
 import yaml
 from utils.logger import get_logger
-from utils.directories import MODEL_SELECTION_YAML
+from utils.directories import MODEL_SELECTION_YAML, HYPERPARAMETER_YAML
 
 yaml_logger = get_logger(__name__)
 
@@ -14,3 +14,6 @@ def read_yaml(path):
 
 def model_selection_yaml():
     return read_yaml(MODEL_SELECTION_YAML)
+
+def hyper_parameter_yaml():
+    return read_yaml(HYPERPARAMETER_YAML)
