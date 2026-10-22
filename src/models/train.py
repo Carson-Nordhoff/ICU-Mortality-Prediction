@@ -5,14 +5,11 @@ from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 
 from sklearn.pipeline import Pipeline
-from sklearn.model_selection import StratifiedGroupKFold, RandomizedSearchCV, GroupShuffleSplit
+from sklearn.model_selection import StratifiedGroupKFold, RandomizedSearchCV
 from src.models.get_model import get_model
 from src.models.evaluate import evaluate
 
-from utils.read_yaml import hyper_parameter_yaml
-
 import pandas as pd
-import numpy as np
 
 from sklearn.metrics import (
     accuracy_score,
@@ -25,8 +22,6 @@ from sklearn.metrics import (
 )
 
 training_logger = get_logger(__name__)
-
-from scipy.stats import randint, uniform
 
 def get_preprocessor(numeric_features: list[str], categorical_features: list[str]) -> ColumnTransformer:
 

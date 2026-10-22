@@ -1,7 +1,5 @@
 #MODEL TO-DO#
 from models.train import coarse_hypertune
-#Handle mortality class imbalance
-#Adjust system to multiple model analysis for optimal model
 
 from src.data.load_data import (
     load_data,
@@ -105,17 +103,9 @@ def pipeline():
     #SECOND PASS: General hypertune top k models to get best model
     hyperparameters = hyper_parameter_yaml()
 
-    #I need to loop over coarse_hypertune
-    #for every model in top_models
-
     hypertuned_models = {}
     for model_name in top_models:
         hypertuned_models[model_name] = coarse_hypertune(X, y, groups, sgkf, numeric_features, categorical_features, model_name, hyperparameters)
-
-
-
-
-
 
     #THIRD PASS: Large compute hypertune search for best model
 

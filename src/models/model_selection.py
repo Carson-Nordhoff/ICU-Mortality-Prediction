@@ -8,13 +8,6 @@ num_models = selection_config["num_models_hyperparameter_tune"]
 
 def top_k_models(trained_models: dict[tuple[str, int], dict]) -> list[str]:
 
-    #now this is being passed
-    # dict key model name
-    # dict key fold
-    # dict of metrics
-
-    top_k_performance_models = []
-
     candidates = {}
 
     model_selection_logger.info("-----GET TOP K MODELS-----")

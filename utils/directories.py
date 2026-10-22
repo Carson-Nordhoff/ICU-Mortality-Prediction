@@ -34,7 +34,7 @@ TRAINED_METRICS_DIR = METRICS_DIR / "metrics.json"
 
 CONFIGS_DIR = ROOT_DIR / "configs"
 MODEL_SELECTION_YAML = CONFIGS_DIR / "model_selection.yaml"
-HYPERPARAMETER_YAML = CONFIGS_DIR / "hyperparameters.yaml"
+COARSE_HYPERPARAMETER_YAML = CONFIGS_DIR / "coarse_hyperparameters.yaml"
 
 def ensure_directories():
 

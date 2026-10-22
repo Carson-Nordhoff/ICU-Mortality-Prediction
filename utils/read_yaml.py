@@ -1,6 +1,6 @@
 import yaml
 from utils.logger import get_logger
-from utils.directories import MODEL_SELECTION_YAML, HYPERPARAMETER_YAML
+from utils.directories import MODEL_SELECTION_YAML, COARSE_HYPERPARAMETER_YAML
 
 from scipy.stats import uniform, randint
 
@@ -21,7 +21,7 @@ def model_selection_yaml():
 
 def hyper_parameter_yaml():
 
-    params = read_yaml(HYPERPARAMETER_YAML)
+    params = read_yaml(COARSE_HYPERPARAMETER_YAML)
 
     formatted_params = defaultdict(dict)
 
