@@ -1,5 +1,5 @@
 #MODEL TO-DO#
-
+from models.train import coarse_hypertune
 #Handle mortality class imbalance
 #Adjust system to multiple model analysis for optimal model
 
@@ -10,9 +10,8 @@ from src.data.load_data import (
     load_clean_mimic_data
 )
 from src.data.clean_data import build_icu_table
-from src.models.train import get_preprocessor, train_default_models
-from src.models.get_model import MODELS, get_model
-from src.models.evaluate import evaluate
+from src.models.train import train_default_models
+from src.models.get_model import MODELS
 from src.models.model_selection import top_k_models
 from src.models.save_model import save_model, load_model
 
@@ -92,15 +91,32 @@ def pipeline():
 
     sgkf = StratifiedGroupKFold(n_splits=3, shuffle=True, random_state=42)
 
-    default_models = train_default_models(X, y, groups, sgkf, numeric_features, categorical_features)
+    #FIRST PASS: Train all default models
+    trained_default_models = train_default_models(X, y, groups, sgkf, numeric_features, categorical_features, MODELS)
 
-    top_models = top_k_models(default_models)
+    pipeline_logger.info("------------------------------------")
+    for (model_name, fold), clf in trained_default_models.items():
+        pipeline_logger.info(model_name)
+
+    #Get top k performing models
+    top_models = top_k_models(trained_default_models)
     pipeline_logger.info(f'top models: {top_models}')
 
-    #IN THE MIDDLE OF IMPLEMENTING HYPERPARAMETER TUNING
-
-    #FIRST PASS DONE: Get top k performing models on baseline
     #SECOND PASS: General hypertune top k models to get best model
+    hyperparameters = hyper_parameter_yaml()
+
+    #I need to loop over coarse_hypertune
+    #for every model in top_models
+
+    hypertuned_models = {}
+    for model_name in top_models:
+        hypertuned_models[model_name] = coarse_hypertune(X, y, groups, sgkf, numeric_features, categorical_features, model_name, hyperparameters)
+
+
+
+
+
+
     #THIRD PASS: Large compute hypertune search for best model
 
 

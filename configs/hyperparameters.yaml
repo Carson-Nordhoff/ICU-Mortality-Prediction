@@ -1,42 +1,21 @@
+xgboost:
+  n_estimators:     {type: randint, bounds: [10, 100]}
+  learning_rate:    {type: uniform, bounds: [0.01, 0.29]}
+  max_depth:        {type: randint, bounds: [3, 10]}
+  min_child_weight: {type: randint, bounds: [1, 7]}
+  subsample:        {type: uniform, bounds: [0.5, 0.5]}
+  colsample_bytree: {type: uniform, bounds: [0.4, 0.6]}
+  gamma:            {type: uniform, bounds: [0, 0.5]}
+  reg_alpha:        {type: uniform, bounds: [0, 2.0]}
+  reg_lambda:       {type: uniform, bounds: [0.5, 5]}
+
 logistic_regression:
-  solver:
-    - "saga"
-    - "lbfgs"
-  penalty:
-    - "l2"
-    - "l1"
-    - "elasticnet"
-  max_iter:
-    - 100
-    - 250
-    - 500
+  max_iter:          {type: randint, bounds: [100, 1000]}
 
 random_forest:
-  n_estimators:
-    - 10
-    - 50
-    - 100
-    - 130
-  max_depth:
-    - 2
-    - 3
-    - 5
-  max_features:
-    - auto
-    - log2
-
-xgboost:
-  n_estimators:
-    - 10
-    - 50
-    - 100
-  learning_rate: 0.3
-  max_depth: 6
-  sub_sample: 1.0
-  colsample_bytree: 1.0
-  min_child_weight: 1
-  gamma: 0
-  reg_alpha: 0
-  reg_lambda: 1
-  scale_pos_weight: 1 #THIS IS CALCULATED
-  early_stopping_rounds: None
+  n_estimators:      {type: randint, bounds: [50, 1000]}
+  max_depth:         {type: randint, bounds: [1, 50]}
+  min_samples_split: {type: randint, bounds: [2, 20]}
+  min_samples_leaf:  {type: randint, bounds: [1, 10]}
+  max_features:      {type: choice, values: [null, sqrt, log2, 0.2, 0.5]}
+  bootstrap:         {type: choice, values: [true, false]}

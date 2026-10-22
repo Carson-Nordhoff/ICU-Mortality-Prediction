@@ -5,32 +5,28 @@ from utils.logger import get_logger
 
 get_model_logger = get_logger(__name__)
 
-MODELS = ["Logistic Regression", "Random Forest", "XGBoost"]
+MODELS = ["logistic_regression", "random_forest", "xgboost"]
 
 #add type hinting for return type?
 
 def get_model(name: str, scale_pos_weight: float):
 
     match name:
-        case "Logistic Regression":
+        case "logistic_regression":
             return LogisticRegression(
-                        max_iter=1000,
-                        class_weight='balanced'
+                        class_weight='balanced',
+                        random_state=42
                     )
-        case "Random Forest":
+        case "random_forest":
             return RandomForestClassifier(
-                        n_estimators=100,
-                        class_weight='balanced'
+                        class_weight='balanced',
+                        random_state=42
                     )
-        case "XGBoost":
+        case "xgboost":
             return xgb.XGBClassifier(
-                    learning_rate = 0.3,
-                    max_depth = 6,
-                    subsample = 1.0,
-                    colsample_bytree = 1.0,
-                    random_state = 42,
-                    scale_pos_weight = scale_pos_weight
-            )
+                        scale_pos_weight = scale_pos_weight,
+                        random_state=42
+                    )
         case _:
             get_model_logger.critical("No model matches provided model.")
             raise ValueError("No model matches provided model")

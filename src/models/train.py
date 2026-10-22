@@ -5,10 +5,28 @@ from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 
 from sklearn.pipeline import Pipeline
-from src.models.get_model import MODELS, get_model
+from sklearn.model_selection import StratifiedGroupKFold, RandomizedSearchCV, GroupShuffleSplit
+from src.models.get_model import get_model
 from src.models.evaluate import evaluate
 
+from utils.read_yaml import hyper_parameter_yaml
+
+import pandas as pd
+import numpy as np
+
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    average_precision_score,
+    roc_auc_score,
+    brier_score_loss,
+)
+
 training_logger = get_logger(__name__)
+
+from scipy.stats import randint, uniform
 
 def get_preprocessor(numeric_features: list[str], categorical_features: list[str]) -> ColumnTransformer:
 
@@ -29,9 +47,9 @@ def get_preprocessor(numeric_features: list[str], categorical_features: list[str
         ]
     )
 
-def train_default_models(X, y, groups, sgkf, numeric_features, categorical_features):
+def cross_validate_model(X: pd.DataFrame, y: pd.DataFrame, groups: pd.Series[str], sgkf: StratifiedGroupKFold, numeric_features: list[str], categorical_features: list[str], model_name: str) -> dict[int, dict[str, float]]:
 
-    models = {}
+    performance = {}
 
     for fold, (train_idx, test_idx) in enumerate(sgkf.split(X, y, groups)):
 
@@ -51,28 +69,98 @@ def train_default_models(X, y, groups, sgkf, numeric_features, categorical_featu
 
         preprocessor = get_preprocessor(numeric_features, categorical_features)
 
-        for model_name in MODELS:
+        clf = Pipeline(steps=[
+            ('preprocessor', preprocessor),
+            (model_name, get_model(model_name, scale_pos_weight))
+        ])
 
-            clf = Pipeline(steps=[
-                ('preprocessor', preprocessor),
-                (model_name, get_model(model_name, scale_pos_weight))
-            ])
+        clf.fit(X_train, y_train)
+        preds = clf.predict(X_test)
+        probs = clf.predict_proba(X_test)[:, 1]
 
-            clf.fit(X_train, y_train)
-            preds = clf.predict(X_test)
-            probs = clf.predict_proba(X_test)[:, 1]
+        acc, precision, recall, f1, avg_precision, roc_auc, brier_score = evaluate(y_test, preds, probs, fold)
 
-            acc, precision, recall, f1, avg_precision, roc_auc, brier_score = evaluate(y_test, preds, probs, fold)
+        performance[(model_name, fold)] = {
+            'clf': clf,
+            'acc': acc,
+            'precision': precision,
+            'recall': recall,
+            'f1': f1,
+            'avg_precision': avg_precision,
+            'roc_auc': roc_auc,
+            'brier_score': brier_score
+        }
 
-            models[(fold, model_name)] = {
-                'clf': clf,
-                'acc': acc,
-                'precision': precision,
-                'recall': recall,
-                'f1': f1,
-                'avg_precision': avg_precision,
-                'roc_auc': roc_auc,
-                'brier_score': brier_score
-            }
+    return performance
 
-    return models
+def train_default_models(X, y, groups, sgkf, numeric_features, categorical_features, MODELS):
+
+    default_model_performances = {}
+
+    for model_name in MODELS:
+        training_logger.info(f"Model: {model_name}")
+        performance = cross_validate_model(X, y, groups, sgkf, numeric_features, categorical_features, model_name)
+        default_model_performances.update(performance)
+
+    return default_model_performances
+
+def coarse_hypertune(X, y, groups, sgkf, numeric_features, categorical_features, model_name, params):
+
+    #MANUALLY GRAB A SPLIT USING THE SGKF
+
+    outer_sgkf = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)
+
+    train_idx, test_idx = next(outer_sgkf.split(X, y, groups))
+
+    X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
+    y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
+    groups_train, groups_test = groups[train_idx], groups[test_idx]
+
+    scale_pos_weight = sum(y_train==0) / sum(y_train==1)
+
+    preprocessor = get_preprocessor(numeric_features, categorical_features)
+
+    clf = Pipeline(steps=[
+        ('preprocessor', preprocessor),
+        (model_name, get_model(model_name, scale_pos_weight))
+    ])
+
+    training_logger.info("------------------")
+    training_logger.info(f"Model Name: {model_name}")
+
+    randomized_search = RandomizedSearchCV(
+        estimator=clf,
+        param_distributions=params[model_name],
+        cv=sgkf,
+        n_iter=10,
+        scoring="recall",
+        error_score="raise"
+    )
+
+    randomized_search.fit(X_train, y_train, groups=groups_train)
+
+    best_model = randomized_search.best_estimator_
+
+    y_preds = best_model.predict(X_test)
+    y_probs = best_model.predict_proba(X_test)[:, 1]
+
+    acc = accuracy_score(y_test, y_preds)
+    precision = precision_score(y_test, y_preds)
+    recall = recall_score(y_test, y_preds)
+    f1 = f1_score(y_test, y_preds)
+    avg_precision = average_precision_score(y_test, y_probs)
+    roc_auc = roc_auc_score(y_test, y_probs)
+    brier_score = brier_score_loss(y_test, y_probs)
+
+    training_logger.info(
+        f"Model: {model_name} | "
+        f"Accuracy: {acc:.3f} | "
+        f"Precision: {precision:.3f} | "
+        f"Recall: {recall:.3f} | "
+        f"F1 Score: {f1:.3f} | "
+        f"Average Precision: {avg_precision:.3f} | "
+        f"ROC AUC: {roc_auc:.3f} | "
+        f"Brier Score: {brier_score:.3f} |"
+    )
+
+    return randomized_search

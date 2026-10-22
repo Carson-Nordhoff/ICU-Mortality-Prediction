@@ -1,5 +1,6 @@
 pathlib
 pandas
+pandas-stubs
 dotenv
 sqlalchemy
 psycopg[binary]
@@ -9,3 +10,5 @@ joblib
 pyyaml
 matplotlib
 xgboost
+scipy
+scipy-stubs
