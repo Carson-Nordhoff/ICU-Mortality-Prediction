@@ -1,4 +1,5 @@
 #MODEL TO-DO#
+
 from models.train import coarse_hypertune
 
 from src.data.load_data import (
@@ -87,10 +88,20 @@ def pipeline():
     pipeline_logger.info(f'Class balance for icu_expire_flag: {y.value_counts().to_dict()}')
     pipeline_logger.info(f'Percentile balance for icu_expire_flag: {y.value_counts(normalize=True).round(3).to_dict()}')
 
-    sgkf = StratifiedGroupKFold(n_splits=3, shuffle=True, random_state=42)
+    #Full Data split
+    #To keep a chunk of data for final metric test
+    sgkf = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)
+
+    all_train_idx, all_test_idx = next(sgkf.split(X, y, groups))
+
+    X_train, X_final_test = X.iloc[all_train_idx], X.iloc[all_test_idx]
+    y_train, y_final_test = y.iloc[all_train_idx], y.iloc[all_test_idx]
+    groups_train, groups_final_test = groups.iloc[all_train_idx], groups.iloc[all_test_idx]
+
+    cv_sgkf = StratifiedGroupKFold(n_splits=3, shuffle=True, random_state=42)
 
     #FIRST PASS: Train all default models
-    trained_default_models = train_default_models(X, y, groups, sgkf, numeric_features, categorical_features, MODELS)
+    trained_default_models = train_default_models(X_train, y_train, groups_train, cv_sgkf, numeric_features, categorical_features, MODELS)
 
     pipeline_logger.info("------------------------------------")
     for (model_name, fold), clf in trained_default_models.items():
@@ -105,7 +116,7 @@ def pipeline():
 
     hypertuned_models = {}
     for model_name in top_models:
-        hypertuned_models[model_name] = coarse_hypertune(X, y, groups, sgkf, numeric_features, categorical_features, model_name, hyperparameters)
+        hypertuned_models[model_name] = coarse_hypertune(X_train, y_train, groups_train, cv_sgkf, numeric_features, categorical_features, model_name, hyperparameters)
 
     #THIRD PASS: Large compute hypertune search for best model
 

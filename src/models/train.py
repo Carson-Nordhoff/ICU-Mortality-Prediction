@@ -46,21 +46,21 @@ def cross_validate_model(X: pd.DataFrame, y: pd.DataFrame, groups: pd.Series[str
 
     performance = {}
 
-    for fold, (train_idx, test_idx) in enumerate(sgkf.split(X, y, groups)):
+    for fold, (train_idx, val_idx) in enumerate(sgkf.split(X, y, groups)):
 
         training_logger.info(f'----------Fold: {fold}----------')
 
-        X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
-        y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
+        X_train, X_val = X.iloc[train_idx], X.iloc[val_idx]
+        y_train, y_val = y.iloc[train_idx], y.iloc[val_idx]
 
         training_logger.info(f'Train balance: {y_train.value_counts(normalize=True).round(3).to_dict()}')
-        training_logger.info(f'Test balance: {y_test.value_counts(normalize=True).round(3).to_dict()}')
+        training_logger.info(f'Validation balance: {y_val.value_counts(normalize=True).round(3).to_dict()}')
 
         scale_pos_weight = sum(y_train == 0) / sum(y_train == 1)
 
         train_subjects = set(groups.iloc[train_idx])
-        test_subjects = set(groups.iloc[test_idx])
-        assert train_subjects.isdisjoint(test_subjects), f"Leaked subject_ids across train/test"
+        val_subjects = set(groups.iloc[val_idx])
+        assert train_subjects.isdisjoint(val_subjects), f"Leaked subject_ids across train/validation"
 
         preprocessor = get_preprocessor(numeric_features, categorical_features)
 
@@ -70,10 +70,10 @@ def cross_validate_model(X: pd.DataFrame, y: pd.DataFrame, groups: pd.Series[str
         ])
 
         clf.fit(X_train, y_train)
-        preds = clf.predict(X_test)
-        probs = clf.predict_proba(X_test)[:, 1]
+        preds = clf.predict(X_val)
+        probs = clf.predict_proba(X_val)[:, 1]
 
-        acc, precision, recall, f1, avg_precision, roc_auc, brier_score = evaluate(y_test, preds, probs, fold)
+        acc, precision, recall, f1, avg_precision, roc_auc, brier_score = evaluate(y_val, preds, probs, fold)
 
         performance[(model_name, fold)] = {
             'clf': clf,
@@ -105,11 +105,11 @@ def coarse_hypertune(X, y, groups, sgkf, numeric_features, categorical_features,
 
     outer_sgkf = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)
 
-    train_idx, test_idx = next(outer_sgkf.split(X, y, groups))
+    train_idx, val_idx = next(outer_sgkf.split(X, y, groups))
 
-    X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
-    y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
-    groups_train, groups_test = groups[train_idx], groups[test_idx]
+    X_train, X_val = X.iloc[train_idx], X.iloc[val_idx]
+    y_train, y_val = y.iloc[train_idx], y.iloc[val_idx]
+    groups_train, groups_val = groups.iloc[train_idx], groups.iloc[val_idx]
 
     scale_pos_weight = sum(y_train==0) / sum(y_train==1)
 
@@ -136,16 +136,16 @@ def coarse_hypertune(X, y, groups, sgkf, numeric_features, categorical_features,
 
     best_model = randomized_search.best_estimator_
 
-    y_preds = best_model.predict(X_test)
-    y_probs = best_model.predict_proba(X_test)[:, 1]
+    y_preds = best_model.predict(X_val)
+    y_probs = best_model.predict_proba(X_val)[:, 1]
 
-    acc = accuracy_score(y_test, y_preds)
-    precision = precision_score(y_test, y_preds)
-    recall = recall_score(y_test, y_preds)
-    f1 = f1_score(y_test, y_preds)
-    avg_precision = average_precision_score(y_test, y_probs)
-    roc_auc = roc_auc_score(y_test, y_probs)
-    brier_score = brier_score_loss(y_test, y_probs)
+    acc = accuracy_score(y_val, y_preds)
+    precision = precision_score(y_val, y_preds)
+    recall = recall_score(y_val, y_preds)
+    f1 = f1_score(y_val, y_preds)
+    avg_precision = average_precision_score(y_val, y_probs)
+    roc_auc = roc_auc_score(y_val, y_probs)
+    brier_score = brier_score_loss(y_val, y_probs)
 
     training_logger.info(
         f"Model: {model_name} | "
