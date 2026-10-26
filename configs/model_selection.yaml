@@ -1,4 +1,5 @@
 num_models_hyperparameter_tune: 2
+num_top_models: 1
 
 primary_metric: recall
 

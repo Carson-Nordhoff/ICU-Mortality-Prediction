@@ -158,4 +158,17 @@ def coarse_hypertune(X, y, groups, sgkf, numeric_features, categorical_features,
         f"Brier Score: {brier_score:.3f} |"
     )
 
-    return randomized_search
+    performance = {
+        (model_name, 0): {
+            'clf': clf,
+            'acc': acc,
+            'precision': precision,
+            'recall': recall,
+            'f1': f1,
+            'avg_precision': avg_precision,
+            'roc_auc': roc_auc,
+            'brier_score': brier_score
+        }
+    }
+
+    return randomized_search, performance

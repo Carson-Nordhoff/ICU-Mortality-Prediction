@@ -18,6 +18,7 @@ from sklearn.model_selection import StratifiedGroupKFold
 import io
 
 from utils.read_yaml import hyper_parameter_yaml
+from utils.read_yaml import model_selection_yaml
 
 pipeline_logger = get_logger(__name__)
 
@@ -97,18 +98,26 @@ def pipeline():
         pipeline_logger.info(model_name)
 
     #Get top k performing models
-    top_models = top_k_models(trained_default_models)
+    selection_config = model_selection_yaml()
+    top_models = top_k_models(trained_default_models, selection_config, selection_config["num_models_hyperparameter_tune"])
     pipeline_logger.info(f'top models: {top_models}')
 
     #SECOND PASS: General hypertune top k models to get best model
     hyperparameters = hyper_parameter_yaml()
 
     hypertuned_models = {}
+    performances = {}
     for model_name in top_models:
-        hypertuned_models[model_name] = coarse_hypertune(X_train, y_train, groups_train, cv_sgkf, numeric_features, categorical_features, model_name, hyperparameters)
+        hypertuned_models[model_name], performance = coarse_hypertune(X_train, y_train, groups_train, cv_sgkf, numeric_features, categorical_features, model_name, hyperparameters)
+        performances.update(performance)
+
+    #Select best model from coarse search
+    top_model = top_k_models(performances, selection_config, selection_config["num_top_models"])
+    pipeline_logger.info("OVERALL BEST MODEL")
+    pipeline_logger.info(top_model)
+
 
     #THIRD PASS: Large compute hypertune search for best model
-
 
     #
     # final_clf = Pipeline(steps=[

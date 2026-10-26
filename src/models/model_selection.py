@@ -3,10 +3,7 @@ from utils.logger import get_logger
 
 model_selection_logger = get_logger(__name__)
 
-selection_config = model_selection_yaml()
-num_models = selection_config["num_models_hyperparameter_tune"]
-
-def top_k_models(trained_models: dict[tuple[str, int], dict]) -> list[str]:
+def top_k_models(trained_models: dict[tuple[str, int], dict], selection_config, num_models: int) -> list[str]:
 
     candidates = {}
 
