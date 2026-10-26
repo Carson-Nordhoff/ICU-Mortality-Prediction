@@ -3,21 +3,16 @@
 from models.train import coarse_hypertune
 
 from src.data.load_data import (
-    load_data,
-    inspect_data,
-    insert_raw_data,
     load_clean_mimic_data
 )
-from src.data.clean_data import build_icu_table
+#from src.data.clean_data import build_icu_table
 from src.models.train import train_default_models
 from src.models.get_model import MODELS
 from src.models.model_selection import top_k_models
-from src.models.save_model import save_model, load_model
 
 from utils.directories import ensure_directories
 from utils.logger import get_logger
 
-from sklearn.pipeline import Pipeline
 from sklearn.model_selection import StratifiedGroupKFold
 
 import io
@@ -63,12 +58,6 @@ def pipeline():
 
     ensure_directories()
 
-    raw_data = load_data()
-    inspect_data(raw_data)
-
-    insert_raw_data(raw_data)
-
-    build_icu_table()
     df = load_clean_mimic_data()
 
     buffer = io.StringIO()

@@ -119,9 +119,11 @@ ICU-Mortality-Prediction/
 │   ├── metrics/
 │   └── models/
 ├── configs/
+│   ├── coarse_hyperparameters.py
 │   └── model_selection.yaml
 ├── data/
 ├── sql/
+│   ├── alter_tables.sql
 │   └── clean_data.sql
 ├── src/
 │   ├── data/
@@ -129,10 +131,12 @@ ICU-Mortality-Prediction/
 │   │   └── load_data.py
 │   ├── models/
 │   │   ├── evaluate.py
+│   │   ├── get_model.py
 │   │   ├── model_selection.py
 │   │   ├── save_model.py
 │   │   └── train.py
-│   └──pipeline.py
+│   ├── ml_pipeline.py
+│   └── sql_pipeline.py
 ├── utils/
 │   ├── db_config.py
 │   ├── directories.py

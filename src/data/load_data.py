@@ -50,6 +50,8 @@ def insert_raw_data(data: dict[str, pd.DataFrame]):
         raw_df.to_sql(df_name, engine, if_exists='replace', index=False)
         data_logger.info(f"{df_name} loaded successfully.")
 
+    engine.dispose()
+
 def load_clean_mimic_data() -> pd.DataFrame:
 
     engine = get_engine()
@@ -61,7 +63,8 @@ def load_clean_mimic_data() -> pd.DataFrame:
     #data misalignment with the manually specified data
     data_logger.info(f'Columns: {df.columns.to_list()}')
 
-
     data_logger.info("Loaded cleaned data from mimic3 database.")
+
+    engine.dispose()
 
     return df
