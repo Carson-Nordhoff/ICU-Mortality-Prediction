@@ -20,8 +20,11 @@ def model_selection_yaml():
     return read_yaml(MODEL_SELECTION_YAML)
 
 def hyper_parameter_yaml():
+    return read_yaml(COARSE_HYPERPARAMETER_YAML)
 
-    params = read_yaml(COARSE_HYPERPARAMETER_YAML)
+def formatted_hyper_parameter_yaml():
+
+    params = hyper_parameter_yaml()
 
     formatted_params = defaultdict(dict)
 

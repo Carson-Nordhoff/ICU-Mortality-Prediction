@@ -1,12 +1,10 @@
 #MODEL TO-DO#
 
-from models.train import coarse_hypertune
-
 from src.data.load_data import (
     load_clean_mimic_data
 )
 #from src.data.clean_data import build_icu_table
-from src.models.train import train_default_models
+from src.models.train import train_default_models, make_float_param_list, make_int_param_list, fine_hypertune, coarse_hypertune
 from src.models.get_model import MODELS
 from src.models.model_selection import top_k_models
 
@@ -17,8 +15,9 @@ from sklearn.model_selection import StratifiedGroupKFold
 
 import io
 
-from utils.read_yaml import hyper_parameter_yaml
+from utils.read_yaml import formatted_hyper_parameter_yaml
 from utils.read_yaml import model_selection_yaml
+from utils.read_yaml import hyper_parameter_yaml
 
 pipeline_logger = get_logger(__name__)
 
@@ -54,7 +53,7 @@ categorical_features = [
     "gender"
 ]
 binary_features = []
-
+1
 def pipeline():
 
     ensure_directories()
@@ -103,21 +102,51 @@ def pipeline():
     pipeline_logger.info(f'top models: {top_models}')
 
     #SECOND PASS: General hypertune top k models to get best model
-    hyperparameters = hyper_parameter_yaml()
+    hyperparameters = formatted_hyper_parameter_yaml()
 
     hypertuned_models = {}
     performances = {}
     for model_name in top_models:
-        hypertuned_models[model_name], performance = coarse_hypertune(X_train, y_train, groups_train, cv_sgkf, numeric_features, categorical_features, model_name, hyperparameters)
+        hypertuned_models[model_name], performance = coarse_hypertune(X_train, y_train, groups_train, cv_sgkf, numeric_features, categorical_features, model_name, hyperparameters[model_name])
         performances.update(performance)
 
     #Select best model from coarse search
-    top_model = top_k_models(performances, selection_config, selection_config["num_top_models"])
+    top_model = top_k_models(performances, selection_config, selection_config["num_top_models"])[0]
     pipeline_logger.info("OVERALL BEST MODEL")
     pipeline_logger.info(top_model)
 
 
     #THIRD PASS: Large compute hypertune search for best model
+    pipeline_logger.info(hypertuned_models[top_model].best_params_)
+
+    parameters = hyper_parameter_yaml()
+
+    params = {}
+    for parameter_name, value in hypertuned_models[top_model].best_params_.items():
+
+        info = parameter_name.split("__")
+
+        type = parameters[top_model][info[1]]["type"]
+
+        range = []
+        if type == "randint":
+            range = make_int_param_list(value, 1, 0)
+
+        elif type == "uniform":
+            range = make_float_param_list(value, 5, 0)
+
+        elif type == "choice":
+            range = parameters[top_model][info[1]]["values"]
+
+        if range is None or not range:
+            pipeline_logger.error(f"Cannot fine hypertune on empty parameter list for param {parameter_name}")
+            raise ValueError(f"Cannot fine hypertune on empty parameter list for param {parameter_name}")
+
+        params[parameter_name] = range
+
+    best_model_hypertuned, best_model_performance = fine_hypertune(X_train, y_train, groups_train, cv_sgkf, numeric_features, categorical_features, top_model, params)
+
+
 
     #
     # final_clf = Pipeline(steps=[
