@@ -7,11 +7,7 @@ def top_k_models(trained_models: dict[tuple[str, int], dict], selection_config, 
 
     candidates = {}
 
-    model_selection_logger.info("-----GET TOP K MODELS-----")
-
     for (model_name, fold), data in trained_models.items():
-
-        model_selection_logger.info(model_name)
 
         if data["recall"] >= selection_config["thresholds"]["recall"]["min"]:
             candidates[(model_name, fold)] = data

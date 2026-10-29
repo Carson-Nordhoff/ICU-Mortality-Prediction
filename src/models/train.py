@@ -11,16 +11,6 @@ from src.models.evaluate import evaluate
 
 import pandas as pd
 
-from sklearn.metrics import (
-    accuracy_score,
-    precision_score,
-    recall_score,
-    f1_score,
-    average_precision_score,
-    roc_auc_score,
-    brier_score_loss,
-)
-
 training_logger = get_logger(__name__)
 
 def make_float_param_list(val: float, step: int, steps_per_side: int) -> list[float]:
@@ -39,6 +29,34 @@ def make_int_param_list(val: int, step: int, steps_per_side: int) -> list[int]:
     front = [val + (i * step) for i in range(1, steps_per_side+1)]
 
     return back + [val] + front
+
+def make_fine_tune_params(hypertuned_models, top_model, parameters):
+
+    params = {}
+
+    for parameter_name, value in hypertuned_models[top_model].best_params_.items():
+
+        info = parameter_name.split("__")
+
+        type = parameters[top_model][info[1]]["type"]
+
+        range = []
+        if type == "randint":
+            range = make_int_param_list(value, 1, 0)
+
+        elif type == "uniform":
+            range = make_float_param_list(value, 5, 0)
+
+        elif type == "choice":
+            range = parameters[top_model][info[1]]["values"]
+
+        if range is None or not range:
+            training_logger.error(f"Cannot fine hypertune on empty parameter list for param {parameter_name}")
+            raise ValueError(f"Cannot fine hypertune on empty parameter list for param {parameter_name}")
+
+        params[parameter_name] = range
+
+        return params
 
 def get_preprocessor(numeric_features: list[str], categorical_features: list[str]) -> ColumnTransformer:
 
@@ -110,7 +128,7 @@ def train_default_models(X, y, groups, sgkf, numeric_features, categorical_featu
     default_model_performances = {}
 
     for model_name in MODELS:
-        training_logger.info(f"Model: {model_name}")
+        training_logger.info(f"Performing Cross-Validation for default model: {model_name}")
         performance = cross_validate_model(X, y, groups, sgkf, numeric_features, categorical_features, model_name)
         default_model_performances.update(performance)
 
@@ -183,6 +201,17 @@ def coarse_hypertune(X, y, groups, sgkf, numeric_features, categorical_features,
     }
 
     return randomized_search, performance
+
+def coarse_tune_models(X, y, groups, cv_sgkf, numeric_features, categorical_features, top_models, hyperparameters):
+
+    hypertuned_models = {}
+    performances = {}
+
+    for model_name in top_models:
+        hypertuned_models[model_name], performance = coarse_hypertune(X, y, groups, cv_sgkf, numeric_features, categorical_features, model_name, hyperparameters[model_name])
+        performances.update(performance)
+
+    return hypertuned_models, performances
 
 def fine_hypertune(X, y, groups, sgkf, numeric_features, categorical_features, model_name, params):
 
