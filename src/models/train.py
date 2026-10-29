@@ -90,7 +90,7 @@ def cross_validate_model(X: pd.DataFrame, y: pd.DataFrame, groups: pd.Series[str
         preds = clf.predict(X_val)
         probs = clf.predict_proba(X_val)[:, 1]
 
-        acc, precision, recall, f1, avg_precision, roc_auc, brier_score = evaluate(y_val, preds, probs, fold)
+        acc, precision, recall, f1, avg_precision, roc_auc, brier_score = evaluate(y_val, preds, probs, "default", model_name, fold)
 
         performance[(model_name, fold)] = {
             'clf': clf,
@@ -156,13 +156,7 @@ def coarse_hypertune(X, y, groups, sgkf, numeric_features, categorical_features,
     y_preds = best_model.predict(X_val)
     y_probs = best_model.predict_proba(X_val)[:, 1]
 
-    acc = accuracy_score(y_val, y_preds)
-    precision = precision_score(y_val, y_preds)
-    recall = recall_score(y_val, y_preds)
-    f1 = f1_score(y_val, y_preds)
-    avg_precision = average_precision_score(y_val, y_probs)
-    roc_auc = roc_auc_score(y_val, y_probs)
-    brier_score = brier_score_loss(y_val, y_probs)
+    acc, precision, recall, f1, avg_precision, roc_auc, brier_score = evaluate(y_val, y_preds, y_probs, "coarse_hypertune", model_name, None)
 
     training_logger.info(
         f"Model: {model_name} | "
@@ -229,13 +223,7 @@ def fine_hypertune(X, y, groups, sgkf, numeric_features, categorical_features, m
     y_preds = best_model.predict(X_val)
     y_probs = best_model.predict_proba(X_val)[:, 1]
 
-    acc = accuracy_score(y_val, y_preds)
-    precision = precision_score(y_val, y_preds)
-    recall = recall_score(y_val, y_preds)
-    f1 = f1_score(y_val, y_preds)
-    avg_precision = average_precision_score(y_val, y_probs)
-    roc_auc = roc_auc_score(y_val, y_probs)
-    brier_score = brier_score_loss(y_val, y_probs)
+    acc, precision, recall, f1, avg_precision, roc_auc, brier_score = evaluate(y_val, y_preds, y_probs, "fine_hypertune", model_name, None)
 
     training_logger.info(
         f"Model: {model_name} | "

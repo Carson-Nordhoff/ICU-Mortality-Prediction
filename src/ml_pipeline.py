@@ -77,7 +77,7 @@ def pipeline():
 
     X = df.drop(columns=['icu_expire_flag'])
     y = df['icu_expire_flag']
-    all_data_scale_pos_weight = sum(y == 0) / sum(y == 1) #don't remove need for commented out final pipeline
+    all_data_scale_pos_weight = sum(y == 0) / sum(y == 1)
 
     groups = df['subject_id']
 
@@ -169,7 +169,13 @@ def pipeline():
     y_preds = best_clf.predict(X_final_test)
     y_probs = best_clf.predict_proba(X_final_test)[:, 1]
 
-    acc, precision, recall, f1, avg_precision, roc_auc, brier_score = evaluate(y_final_test, y_preds, y_probs, 0)
+    acc, precision, recall, f1, avg_precision, roc_auc, brier_score = evaluate(
+        y_final_test,
+        y_preds,
+        y_probs,
+        "best_model",
+        top_model,
+        None)
 
     pipeline_logger.info('FINAL METRICS')
     pipeline_logger.info(

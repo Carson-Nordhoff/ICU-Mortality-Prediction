@@ -1,7 +1,7 @@
 import json
 import matplotlib.pyplot as plt
 
-from utils.directories import TRAINED_METRICS_DIR
+from utils.directories import METRICS_DIR
 from utils.logger import get_logger
 
 from sklearn.metrics import (
@@ -14,6 +14,8 @@ from sklearn.metrics import (
     brier_score_loss,
 )
 from sklearn.calibration import CalibrationDisplay, calibration_curve
+
+import os
 
 evaluate_logger = get_logger(__name__)
 
@@ -38,7 +40,7 @@ type SevenFloats = tuple[
     float
 ]
 
-def evaluate(y_test: list[int], y_preds: list[int], y_probas: list[float], fold: int) -> SevenFloats:
+def evaluate(y_test: list[int], y_preds: list[int], y_probas: list[float], step: str, model: str, fold: int | None) -> SevenFloats:
 
     acc = accuracy_score(y_test, y_preds)
     precision = precision_score(y_test, y_preds)
@@ -71,7 +73,28 @@ def evaluate(y_test: list[int], y_preds: list[int], y_probas: list[float], fold:
         f"Brier Score: {brier_score:.3f} |"
     )
 
-    with open(f'{TRAINED_METRICS_DIR}_Fold{fold}', "w", encoding="utf-8") as f:
+    file_name = ""
+    match step:
+
+        case "default":
+            file_name = f'{step}_{model}_{fold}_metrics.json'
+
+        case "coarse_hypertune":
+            file_name = f'{step}_{model}_metrics.json'
+
+        case "fine_hypertune":
+            file_name = f'{step}_{model}_metrics.json'
+
+        case "best_model":
+            file_name = f'{step}_{model}_metrics.json'
+
+        case _:
+            evaluate_logger.error(f"Cannot save metrics as step is not recognized. Step: {step}")
+            raise ValueError(f"Cannot save metrics as step is not recognized. Step: {step}")
+
+    file_path = os.path.join(METRICS_DIR, file_name)
+
+    with open(file_path, "w", encoding="utf-8") as f:
         json.dump(metrics, f, indent=4)
 
     return acc, precision, recall, f1, avg_precision, roc_auc, brier_score
