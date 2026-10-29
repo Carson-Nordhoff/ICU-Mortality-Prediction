@@ -4,14 +4,21 @@ from src.data.load_data import (
     load_clean_mimic_data
 )
 #from src.data.clean_data import build_icu_table
-from src.models.train import train_default_models, make_float_param_list, make_int_param_list, fine_hypertune, coarse_hypertune
+from src.models.train import get_preprocessor, train_default_models, make_float_param_list, make_int_param_list, fine_hypertune, coarse_hypertune
 from src.models.get_model import MODELS
 from src.models.model_selection import top_k_models
+from src.models.save_model import save_model, load_model
+
+from src.models.evaluate import evaluate
+
+from src.models.get_model import get_model
 
 from utils.directories import ensure_directories
 from utils.logger import get_logger
 
 from sklearn.model_selection import StratifiedGroupKFold
+
+from sklearn.pipeline import Pipeline
 
 import io
 
@@ -53,7 +60,7 @@ categorical_features = [
     "gender"
 ]
 binary_features = []
-1
+
 def pipeline():
 
     ensure_directories()
@@ -146,17 +153,48 @@ def pipeline():
 
     best_model_hypertuned, best_model_performance = fine_hypertune(X_train, y_train, groups_train, cv_sgkf, numeric_features, categorical_features, top_model, params)
 
+    #Last train and test for top model with optimal params
+    preprocessor = get_preprocessor(numeric_features, categorical_features)
+
+    model123 = get_model(top_model, all_data_scale_pos_weight)
+
+    best_clf = Pipeline(steps=[
+        ('preprocessor', preprocessor),
+        (top_model, model123)
+    ])
+
+    best_clf.set_params(**best_model_hypertuned.best_params_)
+
+    best_clf.fit(X_train, y_train)
+    y_preds = best_clf.predict(X_final_test)
+    y_probs = best_clf.predict_proba(X_final_test)[:, 1]
+
+    acc, precision, recall, f1, avg_precision, roc_auc, brier_score = evaluate(y_final_test, y_preds, y_probs, 0)
+
+    pipeline_logger.info('FINAL METRICS')
+    pipeline_logger.info(
+        f"Accuracy: {acc:.3f} | "
+        f"Precision: {precision:.3f} | "
+        f"Recall: {recall:.3f} | "
+        f"F1 Score: {f1:.3f} | "
+        f"Average Precision: {avg_precision:.3f} | "
+        f"ROC AUC: {roc_auc:.3f} | "
+        f"Brier Score: {brier_score:.3f} |"
+    )
 
 
-    #
-    # final_clf = Pipeline(steps=[
-    #         ('preprocessor', get_preprocessor(numeric_features, categorical_features)),
-    #         ('classifier', get_model(best_model_name, all_data_scale_pos_weight))
-    # ])
-    # final_clf.fit(X, y)
-    #
-    # save_model(final_clf)
-    # load_check = load_model()
+    #Train a final optimal model on all the data.
+
+    preprocessor = get_preprocessor(numeric_features, categorical_features)
+
+    final_clf = Pipeline(steps=[
+        ('preprocessor', preprocessor),
+        (top_model, get_model(top_model, all_data_scale_pos_weight))
+    ])
+
+    final_clf.fit(X_train, y_train)
+    save_model(final_clf)
+    load_check = load_model()
 
 if __name__ == "__main__":
     pipeline()

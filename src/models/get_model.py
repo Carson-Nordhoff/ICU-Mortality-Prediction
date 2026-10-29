@@ -9,6 +9,7 @@ MODELS = ["logistic_regression", "random_forest", "xgboost"]
 
 #add type hinting for return type?
 
+#old
 def get_model(name: str, scale_pos_weight: float):
 
     match name:
@@ -17,6 +18,29 @@ def get_model(name: str, scale_pos_weight: float):
                         class_weight='balanced',
                         random_state=42
                     )
+        case "random_forest":
+            return RandomForestClassifier(
+                        class_weight='balanced',
+                        random_state=42
+                    )
+        case "xgboost":
+            return xgb.XGBClassifier(
+                        scale_pos_weight = scale_pos_weight,
+                        random_state=42
+                    )
+        case _:
+            get_model_logger.critical("No model matches provided model.")
+            raise ValueError("No model matches provided model")
+
+#new
+def get_model_set_params(name: str, params: dict, scale_pos_weight: float):
+
+    match name:
+        case "logistic_regression":
+            return LogisticRegression(
+                        class_weight='balanced',
+                        random_state=42
+                    ).set_params(params)
         case "random_forest":
             return RandomForestClassifier(
                         class_weight='balanced',
