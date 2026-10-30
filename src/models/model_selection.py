@@ -1,4 +1,3 @@
-from utils.read_yaml import model_selection_yaml
 from utils.logger import get_logger
 
 model_selection_logger = get_logger(__name__)

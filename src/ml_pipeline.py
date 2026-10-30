@@ -3,15 +3,14 @@
 from src.data.load_data import (
     load_clean_mimic_data
 )
-#from src.data.clean_data import build_icu_table
 from src.models.train import get_preprocessor, train_default_models, make_fine_tune_params, fine_hypertune, coarse_tune_models
-from src.models.get_model import MODELS
+from src.models.get_model_objects import MODELS
 from src.models.model_selection import top_k_models
 from src.models.save_model import save_model, load_model
 
 from src.models.evaluate import evaluate
 
-from src.models.get_model import get_model
+from src.models.get_model_objects import get_model
 
 from utils.directories import ensure_directories
 from utils.logger import get_logger

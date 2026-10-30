@@ -1,12 +1,7 @@
 from utils.logger import get_logger
 
-from sklearn.compose import ColumnTransformer
-from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
-
-from sklearn.pipeline import Pipeline
+from src.models.get_model_objects import get_preprocessor, get_pipeline, get_model
 from sklearn.model_selection import StratifiedGroupKFold, RandomizedSearchCV, GridSearchCV
-from src.models.get_model import get_model
 from src.models.evaluate import evaluate
 
 import pandas as pd
@@ -58,25 +53,6 @@ def make_fine_tune_params(hypertuned_models, top_model, parameters):
 
         return params
 
-def get_preprocessor(numeric_features: list[str], categorical_features: list[str]) -> ColumnTransformer:
-
-    categorical_transformer = Pipeline(steps=[
-        ('imputer', SimpleImputer(strategy='most_frequent')),
-        ('encoder', OneHotEncoder(handle_unknown='ignore'))
-    ])
-
-    numeric_transformer = Pipeline(steps=[
-        ('imputer', SimpleImputer(strategy='median')),
-        ('scaler', StandardScaler())
-    ])
-
-    return ColumnTransformer(
-        transformers=[
-            ('num', numeric_transformer, numeric_features),
-            ('cat', categorical_transformer, categorical_features)
-        ]
-    )
-
 def cross_validate_model(X: pd.DataFrame, y: pd.DataFrame, groups: pd.Series[str], sgkf: StratifiedGroupKFold, numeric_features: list[str], categorical_features: list[str], model_name: str) -> dict[int, dict[str, float]]:
 
     performance = {}
@@ -97,12 +73,7 @@ def cross_validate_model(X: pd.DataFrame, y: pd.DataFrame, groups: pd.Series[str
         val_subjects = set(groups.iloc[val_idx])
         assert train_subjects.isdisjoint(val_subjects), f"Leaked subject_ids across train/validation"
 
-        preprocessor = get_preprocessor(numeric_features, categorical_features)
-
-        clf = Pipeline(steps=[
-            ('preprocessor', preprocessor),
-            (model_name, get_model(model_name, scale_pos_weight))
-        ])
+        clf = get_pipeline(model_name, scale_pos_weight, numeric_features, categorical_features)
 
         clf.fit(X_train, y_train)
         preds = clf.predict(X_val)
@@ -148,12 +119,7 @@ def coarse_hypertune(X, y, groups, sgkf, numeric_features, categorical_features,
 
     scale_pos_weight = sum(y_train==0) / sum(y_train==1)
 
-    preprocessor = get_preprocessor(numeric_features, categorical_features)
-
-    clf = Pipeline(steps=[
-        ('preprocessor', preprocessor),
-        (model_name, get_model(model_name, scale_pos_weight))
-    ])
+    clf = get_pipeline(model_name, scale_pos_weight, numeric_features, categorical_features)
 
     training_logger.info("------------------")
     training_logger.info(f"Model Name: {model_name}")
@@ -227,12 +193,7 @@ def fine_hypertune(X, y, groups, sgkf, numeric_features, categorical_features, m
 
     scale_pos_weight = sum(y_train==0) / sum(y_train==1)
 
-    preprocessor = get_preprocessor(numeric_features, categorical_features)
-
-    clf = Pipeline(steps=[
-        ('preprocessor', preprocessor),
-        (model_name, get_model(model_name, scale_pos_weight))
-    ])
+    clf = get_pipeline(model_name, scale_pos_weight, numeric_features, categorical_features)
 
     training_logger.info("------------------")
     training_logger.info(f"Model Name: {model_name}")

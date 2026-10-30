@@ -1,4 +1,3 @@
-import psycopg
 from utils.directories import ALTER_TABLES, CLEAN_DATA
 from utils.db_config import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
 from utils.logger import get_logger

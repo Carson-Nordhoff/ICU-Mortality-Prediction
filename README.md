@@ -131,7 +131,7 @@ ICU-Mortality-Prediction/
 │   │   └── load_data.py
 │   ├── models/
 │   │   ├── evaluate.py
-│   │   ├── get_model.py
+│   │   ├── get_model_objects.py
 │   │   ├── model_selection.py
 │   │   ├── save_model.py
 │   │   └── train.py
