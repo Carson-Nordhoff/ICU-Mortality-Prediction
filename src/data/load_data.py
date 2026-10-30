@@ -7,6 +7,7 @@ from sqlalchemy import create_engine, Engine
 from utils.db_config import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
 from pathlib import Path
 import pandas as pd
+import io
 
 data_logger = get_logger(__name__)
 
@@ -37,7 +38,15 @@ def inspect_data(data: dict[str, pd.DataFrame]):
     for raw_csv in data.values():
         data_logger.info(f"Data inspection for {raw_csv}")
         data_logger.info(raw_csv.head())
-        data_logger.info(raw_csv.info()) #is this function not returning anything?
+        data_logger.info(f"DataFrame Info:\n {format_dataframe_info(raw_csv)}")
+
+def format_dataframe_info(df: pd.DataFrame) -> str:
+
+    buffer = io.StringIO()
+    df.info(buf=buffer)
+    df_info_str = buffer.getvalue()
+
+    return df_info_str
 
 #inserts data into postgre
 def insert_raw_data(data: dict[str, pd.DataFrame]):

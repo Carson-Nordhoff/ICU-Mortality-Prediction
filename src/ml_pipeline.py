@@ -1,6 +1,7 @@
 #MODEL TO-DO#
 
 from src.data.load_data import (
+    format_dataframe_info,
     load_clean_mimic_data
 )
 from src.models.train import get_preprocessor, train_default_models, make_fine_tune_params, fine_hypertune, coarse_tune_models
@@ -66,10 +67,7 @@ def pipeline():
 
     df = load_clean_mimic_data()
 
-    buffer = io.StringIO()
-    df.info(buf=buffer)
-    df_info_str = buffer.getvalue()
-    pipeline_logger.info("DataFrame Info:\n%s", df_info_str)
+    pipeline_logger.info(f"DataFrame Info:\n {format_dataframe_info(df)}")
     pipeline_logger.info(df.head())
 
     pipeline_logger.info(f'Missingness per column:\n {df.isnull().mean().round(3)}')
