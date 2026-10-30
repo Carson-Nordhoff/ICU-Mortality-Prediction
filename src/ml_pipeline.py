@@ -5,13 +5,12 @@ from src.data.load_data import (
     load_clean_mimic_data
 )
 from src.models.train import (
-    get_preprocessor,
     train_default_models,
     make_fine_tune_params,
-    fine_hypertune,
+    hypertune,
     coarse_tune_models
 )
-from src.models.get_model_objects import MODELS, get_model
+from src.models.get_model_objects import MODELS, get_model, get_preprocessor
 from src.models.icu_mortality_model_selection import top_k_models
 from src.models.save_model import save_model, load_model
 from src.models.evaluate import evaluate
@@ -101,7 +100,7 @@ def pipeline():
     #SECOND PASS: General hypertune top k models to get best model
     hyperparameters = formatted_hyper_parameter_yaml()
 
-    hypertuned_models, performances = coarse_tune_models(X_train, y_train, groups_train, cv_sgkf, numeric_features, categorical_features, top_models, hyperparameters)
+    hypertuned_models, performances = coarse_tune_models(X_train, y_train, groups_train, cv_sgkf, numeric_features, categorical_features, top_models, hyperparameters, "randomized_search")
 
     #Select best model from coarse search
     top_model = top_k_models(performances, selection_config, selection_config["num_top_models"])[0]
@@ -116,7 +115,7 @@ def pipeline():
 
     params = make_fine_tune_params(hypertuned_models, top_model, parameters)
 
-    best_model_hypertuned, best_model_performance = fine_hypertune(X_train, y_train, groups_train, cv_sgkf, numeric_features, categorical_features, top_model, params)
+    best_model_hypertuned, best_model_performance = hypertune(X_train, y_train, groups_train, cv_sgkf, numeric_features, categorical_features, top_model, params, "grid_search")
 
     #Last train and test for top model with optimal params
     #THIS CAN USE THE GET_PIPELINE MODULARIZED FUNC

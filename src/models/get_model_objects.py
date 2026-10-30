@@ -8,6 +8,8 @@ from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 
+from sklearn.model_selection import StratifiedGroupKFold, RandomizedSearchCV, GridSearchCV
+
 from sklearn.pipeline import Pipeline
 
 get_model_logger = get_logger(__name__)
@@ -63,3 +65,28 @@ def get_pipeline(model_name: str, scale_pos_weight: float, numeric_features: lis
         ('preprocessor', get_preprocessor(numeric_features, categorical_features)),
         (model_name, get_model(model_name, scale_pos_weight))
     ])
+
+def get_hypertuner(tuner_name: str, clf: Pipeline, params, sgkf: StratifiedGroupKFold):
+
+    match tuner_name:
+        case "grid_search":
+            return GridSearchCV(
+                estimator=clf,
+                param_grid=params,
+                cv=sgkf,
+                scoring="recall",
+                error_score="raise"
+            )
+        case "randomized_search":
+            return RandomizedSearchCV(
+                estimator=clf,
+                param_distributions=params,
+                cv=sgkf,
+                n_iter=10,
+                scoring="recall",
+                error_score="raise"
+            )
+
+        case _:
+            get_model_logger.critical("No hypertuner matches provided name.")
+            raise ValueError("No hypertuner matches provided name.")
