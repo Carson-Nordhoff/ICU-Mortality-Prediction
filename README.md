@@ -132,7 +132,7 @@ ICU-Mortality-Prediction/
 │   ├── models/
 │   │   ├── evaluate.py
 │   │   ├── get_model_objects.py
-│   │   ├── model_selection.py
+│   │   ├── icu_mortality_model_selection.py
 │   │   ├── save_model.py
 │   │   └── train.py
 │   ├── ml_pipeline.py

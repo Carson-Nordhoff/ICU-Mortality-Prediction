@@ -3,8 +3,15 @@
 
 from utils.directories import CSV_DIRS
 from utils.logger import get_logger
+from utils.db_config import (
+    DB_NAME,
+    DB_USER,
+    DB_PASSWORD,
+    DB_HOST,
+    DB_PORT
+)
+
 from sqlalchemy import create_engine, Engine
-from utils.db_config import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
 from pathlib import Path
 import pandas as pd
 import io

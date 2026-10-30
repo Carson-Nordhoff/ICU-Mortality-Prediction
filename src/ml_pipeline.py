@@ -6,7 +6,7 @@ from src.data.load_data import (
 )
 from src.models.train import get_preprocessor, train_default_models, make_fine_tune_params, fine_hypertune, coarse_tune_models
 from src.models.get_model_objects import MODELS
-from src.models.model_selection import top_k_models
+from src.models.icu_mortality_model_selection import top_k_models
 from src.models.save_model import save_model, load_model
 
 from src.models.evaluate import evaluate
@@ -19,8 +19,6 @@ from utils.logger import get_logger
 from sklearn.model_selection import StratifiedGroupKFold
 
 from sklearn.pipeline import Pipeline
-
-import io
 
 from utils.read_yaml import formatted_hyper_parameter_yaml
 from utils.read_yaml import model_selection_yaml
@@ -99,7 +97,6 @@ def pipeline():
     #Get top k performing models
     selection_config = model_selection_yaml()
     top_models = top_k_models(trained_default_models, selection_config, selection_config["num_models_hyperparameter_tune"])
-    pipeline_logger.info(f'top models: {top_models}')
 
     #SECOND PASS: General hypertune top k models to get best model
     hyperparameters = formatted_hyper_parameter_yaml()
@@ -122,6 +119,8 @@ def pipeline():
     best_model_hypertuned, best_model_performance = fine_hypertune(X_train, y_train, groups_train, cv_sgkf, numeric_features, categorical_features, top_model, params)
 
     #Last train and test for top model with optimal params
+    #THIS CAN USE THE GET_PIPELINE MODULARIZED FUNC
+    #BUT FIRST SEE BELOW
     #CHECK DON'T I NEED TO PASS THE TRAIN CHECK THE GROUPS TEST?
     preprocessor = get_preprocessor(numeric_features, categorical_features)
 
