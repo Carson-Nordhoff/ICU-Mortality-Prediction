@@ -1,5 +1,11 @@
 #MODEL TO-DO#
 
+#IN THE MIDDLE OF MAKING FINE HYPERTUNING
+#AMOUNT OF STEPS BASED ON "PRIORITY" OF PARAM
+#ALSO CHECK IF THE NUMBER IS WITHIN MIN/MAX
+#IF LESS THEN MIN THEN MIN
+#IF MORE THAN MAX THEN MAX
+
 from src.data.load_data import (
     format_dataframe_info,
     load_clean_mimic_data

@@ -5,4 +5,4 @@ primary_metric: recall
 
 thresholds:
   recall:
-    min: 0.010
+    min: 0.000

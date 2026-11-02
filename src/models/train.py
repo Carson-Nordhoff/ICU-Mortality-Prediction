@@ -8,22 +8,22 @@ import pandas as pd
 
 training_logger = get_logger(__name__)
 
-def make_float_param_list(val: float, step: int, steps_per_side: int) -> list[float]:
+numeric = int | float
 
-    mult = 1 + (step/100)
-    div = 1 - (step/100)
+def contain_range(nums: list[numeric], min_: numeric, max_: numeric) -> list[numeric]:
+    return [min_ if n < min_ else max_ if n > max_ else n for n in nums]
 
-    back = [val * (div**i) for i in range(1, steps_per_side+1)][::-1]
-    front = [val * (mult**i) for i in range(1, steps_per_side+1)]
+def make_multiplicative_range(val: numeric, range: list[numeric], param_min: numeric, param_max: numeric) -> list[numeric]:
 
-    return back + [val] + front
+    nums = [val * modifier for modifier in range]
 
-def make_int_param_list(val: int, step: int, steps_per_side: int) -> list[int]:
+    return contain_range(nums, param_min, param_max)
 
-    back = [val - (i * step) for i in range(1, steps_per_side+1)][::-1]
-    front = [val + (i * step) for i in range(1, steps_per_side+1)]
+def make_additive_range(val: numeric, modifier: numeric, param_min: numeric, param_max: numeric) -> list[numeric]:
 
-    return back + [val] + front
+    nums = [val - modifier, val, val + modifier]
+
+    return contain_range(nums, param_min, param_max)
 
 def make_fine_tune_params(hypertuned_models, top_model, parameters):
 
@@ -33,25 +33,49 @@ def make_fine_tune_params(hypertuned_models, top_model, parameters):
 
         info = parameter_name.split("__")
 
-        type = parameters[top_model][info[1]]["type"]
+        param_specs = parameters[top_model][info[1]]
 
-        range = []
-        if type == "randint":
-            range = make_int_param_list(value, 1, 0)
+        param_range = []
 
-        elif type == "uniform":
-            range = make_float_param_list(value, 5, 0)
+        if param_specs["fine_tune"] == "Y" and param_specs["testing_tune"] == "Y":
 
-        elif type == "choice":
-            range = parameters[top_model][info[1]]["values"]
+            match parameter_name:
 
-        if range is None or not range:
-            training_logger.error(f"Cannot fine hypertune on empty parameter list for param {parameter_name}")
-            raise ValueError(f"Cannot fine hypertune on empty parameter list for param {parameter_name}")
+                case "xgboost__gamma" | "xgboost__reg_alpha":
 
-        params[parameter_name] = range
+                    if abs(value) <= 0.05:
+                        param_range = param_specs["alt"]
+                    else:
+                        param_range = make_multiplicative_range(value, param_specs["mult"], param_specs["min"], param_specs["max"])
 
-        return params
+                case "xgboost__min_child_weight":
+
+                    if value <= 5:
+                        param_range = make_additive_range(value, param_specs["add"], param_specs["min"], param_specs["max"])
+                    else:
+                        param_range = make_multiplicative_range(value, param_specs["mult"], param_specs["min"], param_specs["max"])
+
+                case _:
+
+                    if param_specs["mult"] == "N/A" and param_specs["add"] == "N/A":
+                        param_range = param_specs["alt"]
+
+                    elif param_specs["mult"] == "N/A" and param_specs["add"]:
+                        param_range = make_additive_range(value, param_specs["add"], param_specs["min"], param_specs["max"])
+
+                    elif param_specs["mult"] and param_specs["add"] == "N/A":
+                        param_range = make_multiplicative_range(value, param_specs["mult"], param_specs["min"], param_specs["max"])
+
+                    else:
+                        training_logger.error(f"Cannot fine hypertune on empty parameter list for param {parameter_name}")
+                        raise ValueError(f"Cannot fine hypertune on empty parameter list for param {parameter_name}")
+
+        else:
+            param_range = [value]
+
+        params[parameter_name] = param_range
+
+    return params
 
 def cross_validate_model(X: pd.DataFrame, y: pd.DataFrame, groups: pd.Series[str], sgkf: StratifiedGroupKFold, numeric_features: list[str], categorical_features: list[str], model_name: str) -> dict[int, dict[str, float]]:
 

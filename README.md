@@ -103,10 +103,12 @@ Results are noise at this stage and not included.
 
 ## Limitations and Next Steps
 - No missingness checks (Add missingness flags as features)
-- No multi-model analysis (Add XGBoost, Light GBM, Random Forest, SVM)
-- Add hyperparameter tuning
 - Add MLFlow for experiment tracking, model packaging, etc.
 - Add severity scoring
+- Adjust tuning such that:
+  - Parameters are tuned in order of priority
+  - The amount of steps per param is determined by priority
+  - The step length is determined by param size
 - No interpretability (SHAP)
 - No adults only cutoff for data
 - Demographic data (language, religion, etc.) are currectly used. Further analysis is needed on a larger dataset.
