@@ -87,19 +87,20 @@ def cross_validate_model(X: pd.DataFrame, y: pd.DataFrame, groups: pd.Series[str
 
         X_train, X_val = X.iloc[train_idx], X.iloc[val_idx]
         y_train, y_val = y.iloc[train_idx], y.iloc[val_idx]
+        groups_train, groups_val = groups.iloc[train_idx], groups.iloc[val_idx]
 
         training_logger.info(f'Train balance: {y_train.value_counts(normalize=True).round(3).to_dict()}')
         training_logger.info(f'Validation balance: {y_val.value_counts(normalize=True).round(3).to_dict()}')
 
         scale_pos_weight = sum(y_train == 0) / sum(y_train == 1)
 
-        train_subjects = set(groups.iloc[train_idx])
-        val_subjects = set(groups.iloc[val_idx])
+        train_subjects = set(groups_train)
+        val_subjects = set(groups_val)
         assert train_subjects.isdisjoint(val_subjects), f"Leaked subject_ids across train/validation"
 
         clf = get_pipeline(model_name, scale_pos_weight, numeric_features, categorical_features)
 
-        clf.fit(X_train, y_train)
+        clf.fit(X_train, y_train) #Pass this groups_train?
         preds = clf.predict(X_val)
         probs = clf.predict_proba(X_val)[:, 1]
 
