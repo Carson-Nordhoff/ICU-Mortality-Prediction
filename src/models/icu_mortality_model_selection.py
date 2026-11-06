@@ -1,6 +1,6 @@
-from utils.logger import get_logger
+from utils.logger import get_ml_system_logger
 
-model_selection_logger = get_logger(__name__)
+model_selection_logger = get_ml_system_logger(__name__)
 
 def top_k_models(trained_models: dict[tuple[str, int], dict], selection_config, num_models: int) -> list[str]:
 

@@ -2,7 +2,7 @@ import json
 import matplotlib.pyplot as plt
 
 from utils.directories import METRICS_DIR
-from utils.logger import get_logger
+from utils.logger import get_ml_system_logger
 
 from sklearn.metrics import (
     accuracy_score,
@@ -17,7 +17,7 @@ from sklearn.calibration import CalibrationDisplay, calibration_curve
 
 import os
 
-evaluate_logger = get_logger(__name__)
+evaluate_logger = get_ml_system_logger(__name__)
 
 def plot_calibration(y_test: list[int], y_probas: list[float]):
 

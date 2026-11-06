@@ -6,10 +6,8 @@
 #IF LESS THEN MIN THEN MIN
 #IF MORE THAN MAX THEN MAX
 
-from src.data.load_data import (
-    format_dataframe_info,
-    load_clean_mimic_data
-)
+from utils.format_dataframe import format_dataframe_info
+from src.data.load_processed_data import load_clean_mimic_data
 from src.models.train import (
     train_default_models,
     make_fine_tune_params,
@@ -22,14 +20,14 @@ from src.models.save_model import save_model, load_model
 from src.models.evaluate import evaluate
 
 from utils.directories import ensure_directories
-from utils.logger import get_logger
+from utils.logger import get_ml_system_logger
 from utils.read_yaml import model_selection_yaml, hyper_parameter_yaml, formatted_hyper_parameter_yaml
 
 from sklearn.model_selection import StratifiedGroupKFold
 from sklearn.pipeline import Pipeline
 
 
-pipeline_logger = get_logger(__name__)
+ml_pipeline_logger = get_ml_system_logger(__name__)
 
 vitals = [
     "avg_heart_rate",
@@ -70,10 +68,10 @@ def pipeline():
 
     df = load_clean_mimic_data()
 
-    pipeline_logger.info(f"DataFrame Info:\n {format_dataframe_info(df)}")
-    pipeline_logger.info(df.head())
+    ml_pipeline_logger.info(f"DataFrame Info:\n {format_dataframe_info(df)}")
+    ml_pipeline_logger.info(df.head())
 
-    pipeline_logger.info(f'Missingness per column:\n {df.isnull().mean().round(3)}')
+    ml_pipeline_logger.info(f'Missingness per column:\n {df.isnull().mean().round(3)}')
 
     X = df.drop(columns=['icu_expire_flag'])
     y = df['icu_expire_flag']
@@ -81,8 +79,8 @@ def pipeline():
 
     groups = df['subject_id']
 
-    pipeline_logger.info(f'Class balance for icu_expire_flag: {y.value_counts().to_dict()}')
-    pipeline_logger.info(f'Percentile balance for icu_expire_flag: {y.value_counts(normalize=True).round(3).to_dict()}')
+    ml_pipeline_logger.info(f'Class balance for icu_expire_flag: {y.value_counts().to_dict()}')
+    ml_pipeline_logger.info(f'Percentile balance for icu_expire_flag: {y.value_counts(normalize=True).round(3).to_dict()}')
 
     #Full Data split
     #To keep a chunk of data for final metric test
@@ -110,12 +108,12 @@ def pipeline():
 
     #Select best model from coarse search
     top_model = top_k_models(performances, selection_config, selection_config["num_top_models"])[0]
-    pipeline_logger.info("OVERALL BEST MODEL")
-    pipeline_logger.info(top_model)
+    ml_pipeline_logger.info("OVERALL BEST MODEL")
+    ml_pipeline_logger.info(top_model)
 
 
     #THIRD PASS: Large compute hypertune search for best model
-    pipeline_logger.info(hypertuned_models[top_model].best_params_)
+    ml_pipeline_logger.info(hypertuned_models[top_model].best_params_)
 
     parameters = hyper_parameter_yaml()
 
@@ -142,7 +140,7 @@ def pipeline():
     y_preds = best_clf.predict(X_final_test)
     y_probs = best_clf.predict_proba(X_final_test)[:, 1]
 
-    pipeline_logger.info("Final Model Performance")
+    ml_pipeline_logger.info("Final Model Performance")
     evaluate(y_final_test, y_preds, y_probs, "best_model", top_model, None)
 
     #Train a final optimal model on all the data.

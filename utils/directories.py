@@ -26,7 +26,8 @@ CREATE_TABLES = SQL_DIR / "postgres_create_tables.sql"
 ARTIFACT_DIR = ROOT_DIR / "artifacts"
 LOG_DIR = ARTIFACT_DIR / "logs"
 
-PIPELINE_LOG_DIR = LOG_DIR / "pipeline_logs.log"
+ML_PIPELINE_LOG_DIR = LOG_DIR / "ml_pipeline_logs.log"
+SQL_PIPELINE_LOG_DIR = LOG_DIR / "sql_pipeline_logs.log"
 MODELS_DIR = ARTIFACT_DIR / "models"
 METRICS_DIR = ARTIFACT_DIR / "metrics"
 

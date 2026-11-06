@@ -1,11 +1,11 @@
 from utils.directories import ALTER_TABLES, CLEAN_DATA
 from utils.db_config import DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
-from utils.logger import get_logger
+from utils.logger import get_sql_system_logger
 from pathlib import Path
 from psycopg_pool import ConnectionPool
 from contextlib import contextmanager
 
-clean_data_logger = get_logger(__name__)
+clean_data_logger = get_sql_system_logger(__name__)
 
 @contextmanager
 def get_pool():

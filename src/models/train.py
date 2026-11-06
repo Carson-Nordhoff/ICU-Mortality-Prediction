@@ -1,4 +1,4 @@
-from utils.logger import get_logger
+from utils.logger import get_logger, get_ml_system_logger
 
 from src.models.get_model_objects import get_pipeline, get_hypertuner
 from sklearn.model_selection import StratifiedGroupKFold, RandomizedSearchCV, GridSearchCV
@@ -6,7 +6,7 @@ from src.models.evaluate import evaluate
 
 import pandas as pd
 
-training_logger = get_logger(__name__)
+training_logger = get_ml_system_logger(__name__)
 
 numeric = int | float
 

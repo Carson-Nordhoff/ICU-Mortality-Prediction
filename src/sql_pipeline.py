@@ -6,10 +6,10 @@
 
 from src.data.load_data import (
     create_blank_tables,
-    write_data_to_postgres,
-    load_data,
-    inspect_data,
-    insert_raw_data
+    write_data_to_postgres
+    # load_data,
+    # inspect_data,
+    # insert_raw_data
 )
 from src.data.clean_data import build_icu_table
 
@@ -20,16 +20,16 @@ def process_data():
     ensure_directories()
 
     #create the blank tables
-    create_blank_tables()
+    #create_blank_tables()
 
     #raw_data = load_data()
     #inspect_data(raw_data)
 
     #insert_raw_data(raw_data)
 
-    write_data_to_postgres()
+    #write_data_to_postgres()
 
-    build_icu_table()
+    #build_icu_table()
 
 if __name__ == "__main__":
     process_data()

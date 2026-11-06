@@ -1,10 +1,10 @@
 from utils.directories import TRAINED_MODEL
-from utils.logger import get_logger
+from utils.logger import get_ml_system_logger
 import joblib
 
 from sklearn.pipeline import Pipeline
 
-save_model_logger = get_logger(__name__)
+save_model_logger = get_ml_system_logger(__name__)
 
 def save_model(model: Pipeline):
 

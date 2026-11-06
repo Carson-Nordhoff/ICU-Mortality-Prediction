@@ -1,12 +1,12 @@
 import yaml
-from utils.logger import get_logger
+from utils.logger import get_ml_system_logger
 from utils.directories import MODEL_SELECTION_YAML, COARSE_HYPERPARAMETER_YAML, GENERAL_CONFIG_YAML
 
 from scipy.stats import uniform, randint
 
 from collections import defaultdict
 
-yaml_logger = get_logger(__name__)
+yaml_logger = get_ml_system_logger(__name__)
 
 def read_yaml(path):
 

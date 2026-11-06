@@ -2,7 +2,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 import xgboost as xgb
 
-from utils.logger import get_logger
+from utils.logger import get_ml_system_logger
 
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
@@ -12,7 +12,7 @@ from sklearn.model_selection import StratifiedGroupKFold, RandomizedSearchCV, Gr
 
 from sklearn.pipeline import Pipeline
 
-get_model_logger = get_logger(__name__)
+get_model_logger = get_ml_system_logger(__name__)
 
 MODELS = ["logistic_regression", "random_forest", "xgboost"]
 
