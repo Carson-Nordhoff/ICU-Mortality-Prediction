@@ -15,6 +15,7 @@ of help to identify at risk patients to provide extra care.
 - [Limitations & Next Steps](#limitations-and-next-steps)
 - [Repo Structure](#repository-structure)
 - [System Requirements](#system-requirements)
+- [Hardware Requirements](#hardware-requirements)
 - [Installation & Setup](#installation--setup)
   - [Repository](#repository)
   - [Postgres 18.6](#postgres-186)
@@ -121,16 +122,20 @@ ICU-Mortality-Prediction/
 │   ├── metrics/
 │   └── models/
 ├── configs/
-│   ├── coarse_hyperparameters.py
+│   ├── coarse_hyperparameters.yaml
+│   ├── general.yaml
 │   └── model_selection.yaml
 ├── data/
 ├── sql/
 │   ├── alter_tables.sql
-│   └── clean_data.sql
+│   ├── clean_data.sql
+│   └── postgres_create_tables.sql
 ├── src/
 │   ├── data/
-│   │   ├── clean_data.py
-│   │   └── load_data.py
+│   │   ├── data_ingestion
+│   │   │   ├── clean_data.py
+│   │   │   └── load_data.py
+│   │   └── load_processed_data.py
 │   ├── models/
 │   │   ├── evaluate.py
 │   │   ├── get_model_objects.py
@@ -139,11 +144,20 @@ ICU-Mortality-Prediction/
 │   │   └── train.py
 │   ├── ml_pipeline.py
 │   └── sql_pipeline.py
+├── third_part_documentation/
+│   └── mit-mimic-code/
+│       └── license-for-postgres_create_tables
+│           └── LICENSE
 ├── utils/
 │   ├── db_config.py
 │   ├── directories.py
+│   ├── format_dataframe.py
+│   ├── get_engine.py
 │   ├── logger.py
 │   └── read_yaml.py
+├── .env.example
+├── .gitignore
+├── LICENSE
 ├── README.md
 └── requirements.txt
 ```
@@ -152,6 +166,8 @@ ICU-Mortality-Prediction/
 - Python 3.14.7
 - Windows 11
 - Postgres 18.6
+
+*try not to melt your CPU
 
 ## Installation & Setup
 Containerization with Docker is a planned improvement of this project to avoid manual environment setups.
