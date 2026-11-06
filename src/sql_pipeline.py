@@ -1,7 +1,12 @@
-#THIS IS A TEMPORARY FILE TO MAKE IT EASIER TO RUN ITERATIONS WHILE TESTING CODE
-#IT WILL EVENTUALLY BE RE-ABSORBED INTO THE PIPELINE
+#TO-DO
+#MAKE READING IN DATA MORE EFFICIENT
+#MAINLY CHART EVENTS?
+
+#Add alternate quick run vs. full run options?
 
 from src.data.load_data import (
+    create_blank_tables,
+    write_data_to_postgres,
     load_data,
     inspect_data,
     insert_raw_data
@@ -14,10 +19,15 @@ def process_data():
 
     ensure_directories()
 
-    raw_data = load_data()
-    inspect_data(raw_data)
+    #create the blank tables
+    create_blank_tables()
 
-    insert_raw_data(raw_data)
+    #raw_data = load_data()
+    #inspect_data(raw_data)
+
+    #insert_raw_data(raw_data)
+
+    write_data_to_postgres()
 
     build_icu_table()
 

@@ -1,0 +1,2 @@
+chunking:
+  min_file_size: 50000

@@ -5,11 +5,11 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 
 RAW_DATA_DIR = ROOT_DIR / "data"
 
-ADMISSIONS = RAW_DATA_DIR / "ADMISSIONS.csv"
-PATIENTS = RAW_DATA_DIR / "PATIENTS.csv"
-ICUSTAYS = RAW_DATA_DIR / "ICUSTAYS.csv"
-CHARTEVENTS = RAW_DATA_DIR / "CHARTEVENTS.csv"
-LABEVENTS = RAW_DATA_DIR / "LABEVENTS.csv"
+ADMISSIONS = RAW_DATA_DIR / "ADMISSIONS.csv.gz"
+PATIENTS = RAW_DATA_DIR / "PATIENTS.csv.gz"
+ICUSTAYS = RAW_DATA_DIR / "ICUSTAYS.csv.gz"
+CHARTEVENTS = RAW_DATA_DIR / "CHARTEVENTS.csv.gz"
+LABEVENTS = RAW_DATA_DIR / "LABEVENTS.csv.gz"
 
 CSV_DIRS = [
     ADMISSIONS,
@@ -21,6 +21,7 @@ CSV_DIRS = [
 SQL_DIR = ROOT_DIR / "sql"
 ALTER_TABLES = SQL_DIR / "alter_tables.sql"
 CLEAN_DATA = SQL_DIR / "clean_data.sql"
+CREATE_TABLES = SQL_DIR / "postgres_create_tables.sql"
 
 ARTIFACT_DIR = ROOT_DIR / "artifacts"
 LOG_DIR = ARTIFACT_DIR / "logs"
@@ -34,6 +35,7 @@ TRAINED_MODEL = MODELS_DIR / "trained_model.pkl"
 CONFIGS_DIR = ROOT_DIR / "configs"
 MODEL_SELECTION_YAML = CONFIGS_DIR / "model_selection.yaml"
 COARSE_HYPERPARAMETER_YAML = CONFIGS_DIR / "coarse_hyperparameters.yaml"
+GENERAL_CONFIG_YAML = CONFIGS_DIR / "general.yaml"
 
 def ensure_directories():
 

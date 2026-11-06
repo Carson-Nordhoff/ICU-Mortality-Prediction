@@ -1,6 +1,6 @@
 import yaml
 from utils.logger import get_logger
-from utils.directories import MODEL_SELECTION_YAML, COARSE_HYPERPARAMETER_YAML
+from utils.directories import MODEL_SELECTION_YAML, COARSE_HYPERPARAMETER_YAML, GENERAL_CONFIG_YAML
 
 from scipy.stats import uniform, randint
 
@@ -49,3 +49,6 @@ def formatted_hyper_parameter_yaml():
             formatted_params[model_name][f"{model_name}__{param_name}"] = functionality
 
     return formatted_params
+
+def general_config():
+    return read_yaml(GENERAL_CONFIG_YAML)
