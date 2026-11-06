@@ -14,13 +14,7 @@ def process_data():
 
     peak_data()
 
-    #create the blank tables
     #create_blank_tables()
-
-    #raw_data = load_data()
-    #inspect_data(raw_data)
-
-    #insert_raw_data(raw_data)
 
     #write_data_to_postgres()
 

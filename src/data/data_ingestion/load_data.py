@@ -15,6 +15,7 @@ from pathlib import Path
 import os
 
 NROWS = general_config()["peak_data"]["nrows"]
+CHUNK_SIZE = general_config()["chunking"]["chunk_size"]
 
 data_logger = get_sql_system_logger(__name__)
 
@@ -54,8 +55,6 @@ def write_data_to_postgres():
     engine = get_engine()
     conn = engine.raw_connection()
 
-    chunk_size = 10000000 #10MB
-
     try:
         with (conn.cursor() as cur):
             for csv_path in CSV_DIRS:
@@ -80,7 +79,7 @@ def write_data_to_postgres():
                 with raw_opener, gz_opener as f, cur.copy(
                     f"COPY {table} FROM STDIN WITH (FORMAT csv, HEADER true)"
                 ) as copy:
-                    while chunk := f.read(chunk_size):  # 10 MB at a time
+                    while chunk := f.read(CHUNK_SIZE):
                         copy.write(chunk)
 
                         amount_read = raw_opener.tell() #amount of bytes read
@@ -88,7 +87,7 @@ def write_data_to_postgres():
 
                         curr_time = time.time()
 
-                        eta = (file_size - amount_read) / chunk_size * ((curr_time-prev_time)/60)
+                        eta = (file_size - amount_read) / CHUNK_SIZE * ((curr_time-prev_time)/60)
 
                         data_logger.info(
                             f"Loaded {percent_read:.3f}% of data "
