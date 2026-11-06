@@ -4,16 +4,9 @@
 
 #Add alternate quick run vs. full run options?
 
-from src.data.load_data import (
-    create_blank_tables,
-    write_data_to_postgres
-    # load_data,
-    # inspect_data,
-    # insert_raw_data
-)
-from src.data.clean_data import build_icu_table
-
 from utils.directories import ensure_directories
+from src.data.data_ingestion.load_data import create_blank_tables, write_data_to_postgres
+from src.data.data_ingestion.clean_data import build_icu_table
 
 def process_data():
 
