@@ -38,10 +38,12 @@ def clean_data(file_path: Path, pool: ConnectionPool):
 
 def build_icu_table():
 
-    clean_data_logger.info(f"Altering raw data tables...")
-    with get_pool() as pool:
-        clean_data(ALTER_TABLES, pool)
-    clean_data_logger.info("Successfully altered tables.")
+    # no longer altering these datatypes should be fine since we are now using
+    # the full dataset
+    # clean_data_logger.info(f"Altering raw data tables...")
+    # with get_pool() as pool:
+    #     clean_data(ALTER_TABLES, pool)
+    # clean_data_logger.info("Successfully altered tables.")
 
     clean_data_logger.info(f"Cleaning raw data tables...")
     with get_pool() as pool:

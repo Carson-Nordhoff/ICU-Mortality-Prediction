@@ -1,2 +1,5 @@
 chunking:
   min_file_size: 50000
+
+peak_data:
+  nrows: 10

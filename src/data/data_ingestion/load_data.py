@@ -3,15 +3,33 @@
 
 import time
 import gzip
+import pandas as pd
 
 from utils.directories import CSV_DIRS, CREATE_TABLES
 from utils.logger import get_sql_system_logger
 from utils.get_engine import get_engine
+from utils.format_dataframe import format_dataframe_info
+from utils.read_yaml import general_config
 
 from pathlib import Path
 import os
 
+NROWS = general_config()["peak_data"]["nrows"]
+
 data_logger = get_sql_system_logger(__name__)
+
+def peak_data() -> None:
+
+    data_logger.info("Taking a peak at raw data.")
+    for csv_dir in CSV_DIRS:
+
+        df = pd.read_csv(csv_dir, nrows=NROWS)
+
+        csv_name = Path(csv_dir).stem.lower()
+
+        data_logger.info(f"Data inspection for {csv_name}")
+        data_logger.info(f"DataFrame Head: {df.head()}")
+        data_logger.info(f"DataFrame Info:\n {format_dataframe_info(df)}")
 
 def run_slq_file(sql_path: Path):
 
@@ -87,39 +105,3 @@ def write_data_to_postgres():
     finally:
         conn.close()
         engine.dispose()
-
-#load data from raw csvs
-# def load_data() -> dict[str, pd.DataFrame]:
-#
-#     raw_data = {}
-#
-#     data_logger.info("Loading raw data...")
-#     for csv_dir in CSV_DIRS:
-#
-#         data_logger.info(f"Successfully loaded {csv_dir}")
-#         df = pd.read_csv(csv_dir, low_memory=False)
-#         df.columns = df.columns.str.lower()
-#         csv_name = Path(csv_dir).stem.lower()
-#         raw_data[csv_name] = df
-#
-#     return raw_data
-
-#inspects head and info per csv
-# def inspect_data(data: dict[str, pd.DataFrame]):
-#     for raw_csv in data.values():
-#         data_logger.info(f"Data inspection for {raw_csv}")
-#         data_logger.info(raw_csv.head())
-#         data_logger.info(f"DataFrame Info:\n {format_dataframe_info(raw_csv)}")
-
-#inserts data into postgre
-# def insert_raw_data(data: dict[str, pd.DataFrame]):
-#
-#     engine = get_engine()
-#     data_logger.info("Inserting data into mimic3 database.")
-#
-#     for df_name, raw_df in data.items():
-#
-#         raw_df.to_sql(df_name, engine, if_exists='replace', index=False)
-#         data_logger.info(f"{df_name} loaded successfully.")
-#
-#     engine.dispose()

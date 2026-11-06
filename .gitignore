@@ -1,3 +1,6 @@
+#ignore any scratch files
+*scratch*
+
 #ignore all data, keep folder
 data/*
 !data/.gitkeep
