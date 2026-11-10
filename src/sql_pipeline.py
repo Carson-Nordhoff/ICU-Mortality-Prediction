@@ -5,7 +5,7 @@
 #Add alternate quick run vs. full run options?
 
 from utils.directories import ensure_directories
-from src.data.data_ingestion.load_data import peak_data, create_blank_tables, write_data_to_postgres
+from src.data.data_ingestion.load_data import peak_data, create_blank_tables, write_data_to_postgres, copy_tables
 from src.data.data_ingestion.clean_data import build_icu_table
 
 def process_data():
@@ -14,11 +14,11 @@ def process_data():
 
     peak_data()
 
-    #create_blank_tables()
+    create_blank_tables()
 
-    #write_data_to_postgres()
+    copy_tables()
 
-    #build_icu_table()
+    build_icu_table()
 
 if __name__ == "__main__":
     process_data()

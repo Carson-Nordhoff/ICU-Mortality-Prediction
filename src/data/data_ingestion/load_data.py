@@ -1,15 +1,18 @@
 #TO-DO Explicit data type given when reading CSVs to avoid multiple-datatype error
 #instead of low_memory = False?
 
+#get rid of rows with error=1
+
 import time
-import gzip
 import pandas as pd
+import gzip, subprocess
 
 from utils.directories import CSV_DIRS, CREATE_TABLES
 from utils.logger import get_sql_system_logger
 from utils.get_engine import get_engine
 from utils.format_dataframe import format_dataframe_info
 from utils.read_yaml import general_config
+from utils.db_config import *
 
 from pathlib import Path
 import os
@@ -50,57 +53,66 @@ def run_slq_file(sql_path: Path):
 def create_blank_tables():
     run_slq_file(CREATE_TABLES)
 
-def write_data_to_postgres():
+def write_data_to_postgres(csv_path: Path, table: str):
 
-    engine = get_engine()
-    conn = engine.raw_connection()
+    cmd = [
+        "psql", "-h", DB_HOST, "-p", str(DB_PORT), "-U", DB_USER, "-d", DB_NAME, #env variables
+        "-v", "ON_ERROR_STOP=1", "-1", #tells postgres to stop on the first error and exit with a failure code
+        "-c", f"TRUNCATE {table}", #empty the table
+        "-c", f"\\copy {table} FROM pstdin WITH (FORMAT csv, HEADER true)", #copy the data
+    ]
 
-    try:
-        with (conn.cursor() as cur):
-            for csv_path in CSV_DIRS:
+    env = {**os.environ, "PGPASSWORD": DB_PASSWORD} #copies current env variables, add password
 
-                table = csv_path.name.split(".")[0].lower()  # handles .csv and .csv.gz
+    file_size = os.path.getsize(csv_path) #get compressed file size for %loaded calcs
+    start = time.time()
+    prev = time.time()
 
-                start = time.time()
-                prev_time = time.time()
+    #opens the file twice
+    #raw is used for %loaded calcs
+    #gzip is used for reading the zipped file
+    with open(csv_path, "rb") as raw, gzip.GzipFile(fileobj=raw) as f:
 
-                #ISSUES WITH LOADING TAKING LONGER PER ITERATION
+        #starts psql and passes cmd, pipeline, and environment details
+        proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, env=env)
 
-                cur.execute(f"TRUNCATE {table}")
 
-                raw_opener = open(csv_path, "rb")
-                gz_opener = gzip.GzipFile(fileobj=raw_opener)
+        try:
 
-                file_size = os.path.getsize(csv_path) # size of file in bytes
-                data_logger.info(f'File Size: {file_size}')
+            #reads CHUNK_SIZE MB a time
+            while chunk := f.read(CHUNK_SIZE):
 
-                data_logger.info(f"Reading file: {table}. Size: {file_size / 1000000:.3f}MB")
+                #sends the chunk into the pipeline
+                #but waits for postgres to read before sending more
+                proc.stdin.write(chunk)
 
-                with raw_opener, gz_opener as f, cur.copy(
-                    f"COPY {table} FROM STDIN WITH (FORMAT csv, HEADER true)"
-                ) as copy:
-                    while chunk := f.read(CHUNK_SIZE):
-                        copy.write(chunk)
+                now = time.time()
 
-                        amount_read = raw_opener.tell() #amount of bytes read
-                        percent_read = amount_read / file_size * 100
+                pct = raw.tell() / file_size * 100
+                elapsed_min = (now - start) / 60
+                eta_min = elapsed_min / pct * (100 - pct)
+                chunk_speed = now - prev
 
-                        curr_time = time.time()
+                data_logger.info(
+                    f"Loading: {table} | {pct:.3f}% | Elapsed {elapsed_min:.3f} Min | Chunk Speed: {chunk_speed:.3f} Sec | {eta_min:.3f} Min Remaining"
+                )
+                prev = now
 
-                        eta = (file_size - amount_read) / CHUNK_SIZE * ((curr_time-prev_time)/60)
+        #catches if psql exits early
+        #but ignores it for the RuntimeError
+        except BrokenPipeError:
+            pass
 
-                        data_logger.info(
-                            f"Loaded {percent_read:.3f}% of data "
-                            f"| Chunk Time: {(curr_time-prev_time):.3f} "
-                            f"| Elapsed: {(curr_time-start)/60:.3f} Minutes "
-                            f"| Remaining: {eta:.3f} Minutes."
-                        )
-                        prev_time = curr_time
+        #closes connection at EOF
+        finally:
+            proc.stdin.close()
 
-                data_logger.info(f"Successfully copied {table} to postgres. Time to execute: {(time.time()-start):.3f} seconds.")
+        if proc.wait() != 0:
+            raise RuntimeError(f"psql load failed for {table}")
 
-        conn.commit()
+    data_logger.info(f"{table} loaded in {(time.time() - start) / 60:.3f} min.")
 
-    finally:
-        conn.close()
-        engine.dispose()
+def copy_tables():
+
+    for csv in CSV_DIRS:
+        write_data_to_postgres(csv, csv.name.split(".")[0].lower())
