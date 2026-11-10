@@ -15,7 +15,7 @@ xgboost:
   colsample_bytree: {type: uniform, bounds: [0.4, 0.6], fine_tune: Y, alt: N/A, add: 0.1, mult: N/A, min: .04, max: 1.0, priority: high, testing_tune: N}
 
 logistic_regression:
-  max_iter:          {type: randint, bounds: [100, 1000], fine_tune: N, alt: N/A, add: N/A, mult: N/A, min: 100, max: 1000, priority: high, testing_tune: N}
+  max_iter:          {type: randint, bounds: [1000, 1001], fine_tune: N, alt: N/A, add: N/A, mult: N/A, min: 1000, max: 1500, priority: high, testing_tune: N}
 
 random_forest:
   n_estimators:      {type: randint, bounds: [50, 1000], fine_tune: N, alt: N/A, add: N/A, mult: N/A, min: 50, max: 1000, priority: high, testing_tune: Y}

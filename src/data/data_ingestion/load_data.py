@@ -1,7 +1,7 @@
 #TO-DO Explicit data type given when reading CSVs to avoid multiple-datatype error
 #instead of low_memory = False?
 
-#get rid of rows with error=1
+#get rid of rows with error=1??
 
 import time
 import pandas as pd

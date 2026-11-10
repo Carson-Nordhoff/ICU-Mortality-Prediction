@@ -24,7 +24,8 @@ def get_model(name: str, scale_pos_weight: float):
         case "logistic_regression":
             return LogisticRegression(
                         class_weight='balanced',
-                        random_state=42
+                        random_state=42,
+                        max_iter=1000
                     )
         case "random_forest":
             return RandomForestClassifier(
