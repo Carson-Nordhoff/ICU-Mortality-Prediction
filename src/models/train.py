@@ -108,13 +108,15 @@ def cross_validate_model(X: pd.DataFrame, y: pd.DataFrame, groups: pd.Series[str
 
         performance[(model_name, fold)] = {
             'clf': clf,
-            'acc': acc,
-            'precision': precision,
-            'recall': recall,
-            'f1': f1,
-            'avg_precision': avg_precision,
-            'roc_auc': roc_auc,
-            'brier_score': brier_score
+            'metrics': {
+                'accuracy': acc,
+                'precision': precision,
+                'recall': recall,
+                'f1': f1,
+                'avg_precision': avg_precision,
+                'roc_auc': roc_auc,
+                'brier_score': brier_score
+            }
         }
 
     return performance
@@ -174,13 +176,15 @@ def hypertune(X, y, groups, sgkf, numeric_features, categorical_features, model_
     performance = {
         (model_name, 0): {
             'clf': clf, #Shouldn't this be best_model not clf??
-            'acc': acc,
-            'precision': precision,
-            'recall': recall,
-            'f1': f1,
-            'avg_precision': avg_precision,
-            'roc_auc': roc_auc,
-            'brier_score': brier_score
+            'metrics': {
+                'accuracy': acc,
+                'precision': precision,
+                'recall': recall,
+                'f1': f1,
+                'avg_precision': avg_precision,
+                'roc_auc': roc_auc,
+                'brier_score': brier_score
+            }
         }
     }
 

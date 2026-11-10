@@ -4,5 +4,25 @@ num_top_models: 1
 primary_metric: recall
 
 thresholds:
+  accuracy:
+    min: 0.2
+    priority: 5
   recall:
-    min: 0.000
+    min: 0.2
+    priority: 1
+  precision:
+    min: 0.2
+    priority: 4
+  f1:
+    min: 0.2
+    priority: 2
+  avg_precision:
+    min: 0.2
+    priority: 3
+  roc_auc:
+    min: 0.2
+    priority: 6
+  brier_score:
+    min: 0.0
+    max: 0.2
+    priority: 7
