@@ -29,8 +29,6 @@ def top_k_models(trained_models: dict[tuple[str, int], dict], selection_config, 
 
         if meets_thresholds(data["metrics"]):
             candidates[(model_name, fold)] = data
-        else:
-            model_selection_logger.info("Model did not meet min thresholds.")
 
     if not candidates:
         model_selection_logger.critical("No model passed minimum thresholds.")
