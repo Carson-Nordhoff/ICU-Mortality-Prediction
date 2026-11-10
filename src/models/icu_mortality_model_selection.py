@@ -10,8 +10,6 @@ BRIER_MAX = CONFIG["brier_score"]["max"]
 
 def meets_thresholds(data: dict[str, float]) -> bool:
 
-    model_selection_logger.info(data)
-
     for threshold in THRESHOLDS:
         if data[threshold] < CONFIG[threshold]["min"]:
             return False

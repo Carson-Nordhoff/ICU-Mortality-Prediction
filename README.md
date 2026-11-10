@@ -31,7 +31,7 @@ NOT as a replacement for professional healthcare workers.
 
 ## Data & Preprocessing
 This project is based on the MIMIC-III Clinical Database Demo.
-No data is replicated or uploaded to GitHub. Simply download the zip file and unzip into the empty data/ folder.
+No data is replicated or uploaded to GitHub. Simply download the .gz zip file and place into the data/ folder.
 - Download the dataset: [MIMIC-III Clinical Database Demo](https://physionet.org/content/mimiciii-demo/1.4/)
 
 ## Cohort & Label
@@ -83,7 +83,7 @@ Labs (averages)
 - Lactate
 
 Other:
-- Age (In MIMIC-III, ages above 89 are shifted for privacy. I capped any age above 89 to 91.4, which is standard.)
+- Age (In MIMIC-III, ages above 89 are shifted for privacy. I capped any age above 89 to 91.4, which is standard for this dataset.)
 
 ## Design Choices
 - All deaths or ICU discharges within 24 hours of ICU stay are not included. This is to AVOID: Sub-24 hours of data being treated as a 24 hour window and providing the model trivial predictions.
@@ -99,8 +99,14 @@ Framework: Scikit-learn
 Primary Metrics: Recall was prioritized to account for the extreme cost of missed positive cases. A missed positive case could lead to a preventable death.
 
 ## Results
-This version of the project uses the MIMIC-III Demo Database, which is only 100 patients.
-Results are noise at this stage and not included.
+Current Best Model: XGBoost (Hypertuned)
+Accuracy: 0.793
+Precision: 0.215
+Recall: 0.734
+F1: 0.333
+PR_AUC: 0.357
+ROC_AUC: 0.853
+Brier: 0.140
 
 ## Limitations and Next Steps
 - No missingness checks (Add missingness flags as features)
@@ -167,6 +173,25 @@ ICU-Mortality-Prediction/
 - Windows 11
 - Postgres 18.6
 
+## Hardware Requirements
+As this project uses the full MIMIC-III Database, it contains large files (up to 33+ GB in "CHARTEVENTS" when unzipped)
+This project also uses a Postgres database - as I wished to learn how to work with realistic databases, instead of running the data ingestion pipeline on csvs directly.
+Because of this, this repository can be quite demanding for hardware to run, mainly the data ingestion portion.
+The data is loaded in chunks, with a pipe object to prevent data backlogs, but it can still be demanding.
+I recommend you have at least:
+- ~50 GB free disk space
+- ~8 GB RAM
+- A relatively new CPU/GPU
+
+For comparison, I've run this program on my laptop several times with success:
+- Processor: AMD Ryzen 5 7535HS with Radeon Graphics, 3301 Mhz, 6 Core(s), 12 Logical Processor(s)
+- RAM: 8.00 GB
+- Disk: 500 GB SSD
+
+If you intend to run this project yourself, it can take a substantial amount of time to execute, mostly due to copying the data (35+ GB total) to Postgres.
+On my laptop - with the specs above - it runs in about 65 minutes.
+So don't say I didn't warn you, buddy.
+
 *try not to melt your CPU
 
 ## Installation & Setup
@@ -174,7 +199,7 @@ Containerization with Docker is a planned improvement of this project to avoid m
 
 ### Repository
 1. Clone the repo using 'git clone https://github.com/Carson-Nordhoff/ICU-Mortality-Prediction.git'
-2. Unzip the MIMIC-III csv files into the main data folder (ICU-Mortality-Prediction/data)
+2. Place the zipped MIMIC-III files into the main data folder (ICU-Mortality-Prediction/data)
 
 ### Postgres 18.6
 1. Go to the [installer](https://www.postgresql.org/download/)
@@ -192,7 +217,8 @@ Run these three lines of code in the IDE terminal in succession.
 You may not need to run 'cd ICU-Mortality-Prediction' if you are already in the directory:
 cd ICU-Mortality-Prediction
 pip install -r requirements
-python -m src.pipeline
+python -m src.sql_pipeline
+python -m src.ml_pipeline
 
 ## Disclaimer
 This system is meant as a proof-of-concept and is not intended for clinical use.
