@@ -35,7 +35,7 @@ TRAINED_MODEL = MODELS_DIR / "trained_model.pkl"
 
 CONFIGS_DIR = ROOT_DIR / "configs"
 MODEL_SELECTION_YAML = CONFIGS_DIR / "model_selection.yaml"
-COARSE_HYPERPARAMETER_YAML = CONFIGS_DIR / "coarse_hyperparameters.yaml"
+HYPERPARAMETER_YAML = CONFIGS_DIR / "hyperparameters.yaml"
 GENERAL_CONFIG_YAML = CONFIGS_DIR / "general.yaml"
 
 def ensure_directories():

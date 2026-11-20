@@ -128,7 +128,7 @@ ICU-Mortality-Prediction/
 │   ├── metrics/
 │   └── models/
 ├── configs/
-│   ├── coarse_hyperparameters.yaml
+│   ├── hyperparameters.yaml
 │   ├── general.yaml
 │   └── model_selection.yaml
 ├── data/
