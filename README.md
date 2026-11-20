@@ -161,7 +161,7 @@ ICU-Mortality-Prediction/
 │   ├── get_engine.py
 │   ├── logger.py
 │   └── read_yaml.py
-├── .env.example
+├── .env.dummy
 ├── .gitignore
 ├── LICENSE
 ├── README.md
@@ -209,7 +209,7 @@ Containerization with Docker is a planned improvement of this project to avoid m
 5. Run 'createdb -U postgres mimic3' in a terminal
 
 ### Environment Setup
-Once the repo is cloned there will be a file named '.env.example'. Rename this to '.env'
+Once the repo is cloned there will be a file named '.env.dummy'. Rename this to '.env'
 Then replace 'yourusername' and 'yourpassword' with said variables you created while installing Postgres 18.6
 
 ### Run System

@@ -5,6 +5,9 @@ from sklearn.model_selection import StratifiedGroupKFold, RandomizedSearchCV, Gr
 from src.models.evaluate import evaluate
 
 import pandas as pd
+import mlflow
+
+from utils.mlflow_config import set_mlflow
 
 training_logger = get_ml_system_logger(__name__)
 
@@ -77,7 +80,7 @@ def make_fine_tune_params(hypertuned_models, top_model, parameters):
 
     return params
 
-def cross_validate_model(X: pd.DataFrame, y: pd.DataFrame, groups: pd.Series[str], sgkf: StratifiedGroupKFold, numeric_features: list[str], categorical_features: list[str], model_name: str) -> dict[int, dict[str, float]]:
+def cross_validate_model(X: pd.DataFrame, y: pd.DataFrame, groups: pd.Series[str], sgkf: StratifiedGroupKFold, numeric_features: list[str], categorical_features: list[str], model_name: str, mlflow_run_name) -> dict[int, dict[str, float]]:
 
     performance = {}
 
@@ -100,24 +103,50 @@ def cross_validate_model(X: pd.DataFrame, y: pd.DataFrame, groups: pd.Series[str
 
         clf = get_pipeline(model_name, scale_pos_weight, numeric_features, categorical_features)
 
-        clf.fit(X_train, y_train) #Pass this groups_train?
-        preds = clf.predict(X_val)
-        probs = clf.predict_proba(X_val)[:, 1]
+        with mlflow.start_run(run_name="default_cv_" + model_name + f"_fold_{fold}", nested=True):
+            clf.fit(X_train, y_train)  # Pass this groups_train?
+            preds = clf.predict(X_val)
+            probs = clf.predict_proba(X_val)[:, 1]
 
-        acc, precision, recall, f1, avg_precision, roc_auc, brier_score = evaluate(y_val, preds, probs, "default", model_name, fold)
+            #log the parameters
+            mlflow.log_params(clf.named_steps[model_name].get_params())
 
-        performance[(model_name, fold)] = {
-            'clf': clf,
-            'metrics': {
-                'accuracy': acc,
-                'precision': precision,
-                'recall': recall,
-                'f1': f1,
-                'avg_precision': avg_precision,
-                'roc_auc': roc_auc,
-                'brier_score': brier_score
+            #log the model
+            mlflow.sklearn.log_model(
+                sk_model=clf,
+                name="default_cv_" + model_name + f"_fold_{fold}",
+                input_example=None,
+                signature=None,
+                skops_trusted_types=["numpy.dtype", "sklearn.tree._tree.Tree", "xgboost.core.Booster", "xgboost.sklearn.XGBClassifier"]
+            )
+
+            #set a tag
+            mlflow.set_tags({"stage": "default", "model": model_name, "fold": fold})
+
+            acc, precision, recall, f1, avg_precision, roc_auc, brier_score = evaluate(y_val, preds, probs, "default", model_name, fold)
+
+            mlflow.log_metrics({
+                "accuracy": acc,
+                "precision": precision,
+                "recall": recall,
+                "f1": f1,
+                "avg_precision": avg_precision,
+                "roc_auc": roc_auc,
+                "brier_score": brier_score
+            })
+
+            performance[(model_name, fold)] = {
+                'clf': clf,
+                'metrics': {
+                    'accuracy': acc,
+                    'precision': precision,
+                    'recall': recall,
+                    'f1': f1,
+                    'avg_precision': avg_precision,
+                    'roc_auc': roc_auc,
+                    'brier_score': brier_score
+                }
             }
-        }
 
     return performance
 
@@ -125,10 +154,17 @@ def train_default_models(X, y, groups, sgkf, numeric_features, categorical_featu
 
     default_model_performances = {}
 
-    for model_name in MODELS:
-        training_logger.info(f"Performing Cross-Validation for default model: {model_name}")
-        performance = cross_validate_model(X, y, groups, sgkf, numeric_features, categorical_features, model_name)
-        default_model_performances.update(performance)
+    mlflow.set_tracking_uri("http://localhost:5000")
+    mlflow.set_experiment("Default Models v2")
+
+    with mlflow.start_run(run_name="default model cv"):
+
+        for model_name in MODELS:
+            training_logger.info(f"Performing Cross-Validation for default model: {model_name}")
+
+            with mlflow.start_run(run_name="default_cv_" + model_name, nested=True):
+                performance = cross_validate_model(X, y, groups, sgkf, numeric_features, categorical_features, model_name, "default")
+                default_model_performances.update(performance)
 
     return default_model_performances
 

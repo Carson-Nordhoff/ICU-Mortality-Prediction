@@ -26,3 +26,8 @@ artifacts/models/*
 #ignore any scratch files
 src/scratch.py
 sql/scratch.sql
+
+#ignore any artifacts that might sneak in from mlflow
+mlruns/
+mlartifacts/
+mlflow.db
