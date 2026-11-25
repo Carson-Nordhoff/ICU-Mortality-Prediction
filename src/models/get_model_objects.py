@@ -83,7 +83,7 @@ def get_hypertuner(tuner_name: str, clf: Pipeline, params, sgkf: StratifiedGroup
                 estimator=clf,
                 param_distributions=params,
                 cv=sgkf,
-                n_iter=10,
+                n_iter=3,
                 scoring="recall",
                 error_score="raise"
             )

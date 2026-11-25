@@ -26,6 +26,8 @@ from utils.read_yaml import model_selection_yaml, hyper_parameter_yaml, formatte
 from sklearn.model_selection import StratifiedGroupKFold
 from sklearn.pipeline import Pipeline
 
+import mlflow
+
 
 ml_pipeline_logger = get_ml_system_logger(__name__)
 
@@ -63,6 +65,9 @@ categorical_features = [
 binary_features = []
 
 def pipeline():
+
+    mlflow.set_tracking_uri("http://localhost:5000")
+    mlflow.set_experiment("Experiment #6")
 
     ensure_directories()
 
@@ -108,9 +113,6 @@ def pipeline():
 
     #Select best model from coarse search
     top_model = top_k_models(performances, selection_config, selection_config["num_top_models"])[0]
-    ml_pipeline_logger.info("OVERALL BEST MODEL")
-    ml_pipeline_logger.info(top_model)
-
 
     #THIRD PASS: Large compute hypertune search for best model
     ml_pipeline_logger.info(hypertuned_models[top_model].best_params_)
@@ -119,7 +121,7 @@ def pipeline():
 
     params = make_fine_tune_params(hypertuned_models, top_model, parameters)
 
-    best_model_hypertuned, best_model_performance = hypertune(X_train, y_train, groups_train, cv_sgkf, numeric_features, categorical_features, top_model, params, "grid_search")
+    best_model_hypertuned, best_model_performance = hypertune(X_train, y_train, groups_train, cv_sgkf, numeric_features, categorical_features, top_model, params, "grid_search", STAGE="fine_tune_", NESTED=False)
 
     #Last train and test for top model with optimal params
     #THIS CAN USE THE GET_PIPELINE MODULARIZED FUNC

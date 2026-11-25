@@ -80,7 +80,7 @@ def make_fine_tune_params(hypertuned_models, top_model, parameters):
 
     return params
 
-def cross_validate_model(X: pd.DataFrame, y: pd.DataFrame, groups: pd.Series[str], sgkf: StratifiedGroupKFold, numeric_features: list[str], categorical_features: list[str], model_name: str, mlflow_run_name) -> dict[int, dict[str, float]]:
+def cross_validate_model(X: pd.DataFrame, y: pd.DataFrame, groups: pd.Series[str], sgkf: StratifiedGroupKFold, numeric_features: list[str], categorical_features: list[str], model_name: str, mlflow_run_name) -> dict[str, dict[str, float]]:
 
     performance = {}
 
@@ -111,15 +111,6 @@ def cross_validate_model(X: pd.DataFrame, y: pd.DataFrame, groups: pd.Series[str
             #log the parameters
             mlflow.log_params(clf.named_steps[model_name].get_params())
 
-            #log the model
-            mlflow.sklearn.log_model(
-                sk_model=clf,
-                name="default_cv_" + model_name + f"_fold_{fold}",
-                input_example=None,
-                signature=None,
-                skops_trusted_types=["numpy.dtype", "sklearn.tree._tree.Tree", "xgboost.core.Booster", "xgboost.sklearn.XGBClassifier"]
-            )
-
             #set a tag
             mlflow.set_tags({"stage": "default", "model": model_name, "fold": fold})
 
@@ -148,14 +139,13 @@ def cross_validate_model(X: pd.DataFrame, y: pd.DataFrame, groups: pd.Series[str
                 }
             }
 
-    return performance
+    top_model = sorted(performance, key=lambda key: performance[key]["metrics"]["recall"], reverse=True)[0]
+
+    return {model_name: performance[top_model]}
 
 def train_default_models(X, y, groups, sgkf, numeric_features, categorical_features, MODELS):
 
     default_model_performances = {}
-
-    mlflow.set_tracking_uri("http://localhost:5000")
-    mlflow.set_experiment("Default Models v2")
 
     with mlflow.start_run(run_name="default model cv"):
 
@@ -168,7 +158,7 @@ def train_default_models(X, y, groups, sgkf, numeric_features, categorical_featu
 
     return default_model_performances
 
-def hypertune(X, y, groups, sgkf, numeric_features, categorical_features, model_name, params, tuner_name: str):
+def hypertune(X, y, groups, sgkf, numeric_features, categorical_features, model_name, params, tuner_name: str, STAGE, NESTED):
 
     #MANUALLY GRAB A SPLIT USING THE SGKF
 
@@ -189,40 +179,67 @@ def hypertune(X, y, groups, sgkf, numeric_features, categorical_features, model_
 
     tuner = get_hypertuner(tuner_name, clf, params, sgkf)
 
-    tuner.fit(X_train, y_train, groups=groups_train)
+    with mlflow.start_run(run_name=STAGE + model_name, nested=NESTED):
 
-    best_model = tuner.best_estimator_
+        tuner.fit(X_train, y_train, groups=groups_train)
 
-    y_preds = best_model.predict(X_val)
-    y_probs = best_model.predict_proba(X_val)[:, 1]
+        best_model = tuner.best_estimator_
 
-    acc, precision, recall, f1, avg_precision, roc_auc, brier_score = evaluate(y_val, y_preds, y_probs, "coarse_hypertune", model_name, None)
+        y_preds = best_model.predict(X_val)
+        y_probs = best_model.predict_proba(X_val)[:, 1]
 
-    training_logger.info(
-        f"Model: {model_name} | "
-        f"Accuracy: {acc:.3f} | "
-        f"Precision: {precision:.3f} | "
-        f"Recall: {recall:.3f} | "
-        f"F1 Score: {f1:.3f} | "
-        f"Average Precision: {avg_precision:.3f} | "
-        f"ROC AUC: {roc_auc:.3f} | "
-        f"Brier Score: {brier_score:.3f} |"
-    )
+        acc, precision, recall, f1, avg_precision, roc_auc, brier_score = evaluate(y_val, y_preds, y_probs, "coarse_hypertune", model_name, None)
 
-    performance = {
-        (model_name, 0): {
-            'clf': clf, #Shouldn't this be best_model not clf??
-            'metrics': {
-                'accuracy': acc,
-                'precision': precision,
-                'recall': recall,
-                'f1': f1,
-                'avg_precision': avg_precision,
-                'roc_auc': roc_auc,
-                'brier_score': brier_score
+        #log the parameters
+        mlflow.log_params(params)
+
+        # set a tag
+        mlflow.set_tags({"stage": STAGE, "model": model_name})
+
+        #log the model
+        mlflow.sklearn.log_model(
+            sk_model=best_model,
+            name=STAGE + model_name,
+            input_example=None,
+            signature=None,
+            skops_trusted_types=["numpy.dtype", "sklearn.tree._tree.Tree", "xgboost.core.Booster", "xgboost.sklearn.XGBClassifier"]
+        )
+
+        mlflow.log_metrics({
+            "accuracy": acc,
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
+            "avg_precision": avg_precision,
+            "roc_auc": roc_auc,
+            "brier_score": brier_score
+        })
+
+        training_logger.info(
+            f"Model: {model_name} | "
+            f"Accuracy: {acc:.3f} | "
+            f"Precision: {precision:.3f} | "
+            f"Recall: {recall:.3f} | "
+            f"F1 Score: {f1:.3f} | "
+            f"Average Precision: {avg_precision:.3f} | "
+            f"ROC AUC: {roc_auc:.3f} | "
+            f"Brier Score: {brier_score:.3f} |"
+        )
+
+        performance = {
+            model_name: {
+                'clf': best_model,
+                'metrics': {
+                    'accuracy': acc,
+                    'precision': precision,
+                    'recall': recall,
+                    'f1': f1,
+                    'avg_precision': avg_precision,
+                    'roc_auc': roc_auc,
+                    'brier_score': brier_score
+                }
             }
         }
-    }
 
     return tuner, performance
 
@@ -231,8 +248,10 @@ def coarse_tune_models(X, y, groups, cv_sgkf, numeric_features, categorical_feat
     hypertuned_models = {}
     performances = {}
 
-    for model_name in top_models:
-        hypertuned_models[model_name], performance = hypertune(X, y, groups, cv_sgkf, numeric_features, categorical_features, model_name, hyperparameters[model_name], tuner_name)
-        performances.update(performance)
+    with mlflow.start_run(run_name="coarse tuning"):
+
+        for model_name in top_models:
+            hypertuned_models[model_name], performance = hypertune(X, y, groups, cv_sgkf, numeric_features, categorical_features, model_name, hyperparameters[model_name], tuner_name, STAGE="coarse_tuning_", NESTED=True)
+            performances.update(performance)
 
     return hypertuned_models, performances

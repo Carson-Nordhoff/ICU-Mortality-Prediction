@@ -19,14 +19,14 @@ def meets_thresholds(data: dict[str, float]) -> bool:
 
     return True
 
-def top_k_models(trained_models: dict[tuple[str, int], dict], selection_config, num_models: int) -> list[str]:
+def top_k_models(trained_models: dict[str, dict], selection_config, num_models: int) -> list[str]:
 
     candidates = {}
 
-    for (model_name, fold), data in trained_models.items():
+    for model_name, data in trained_models.items():
 
         if meets_thresholds(data["metrics"]):
-            candidates[(model_name, fold)] = data
+            candidates[model_name] = data
 
     if not candidates:
         model_selection_logger.critical("No model passed minimum thresholds.")
@@ -37,6 +37,6 @@ def top_k_models(trained_models: dict[tuple[str, int], dict], selection_config, 
         raise ValueError(f"Not enough candidate models passed minimum thresholds. Expected: {num_models} Got: {len(candidates)}")
 
     top_k_performing_keys = sorted(candidates, key=lambda key: candidates[key]["metrics"]["recall"], reverse=True)[:num_models]
-    top_k_performance_models = [key[0] for key in top_k_performing_keys]
+    top_k_performance_models = [key for key in top_k_performing_keys]
 
     return top_k_performance_models
