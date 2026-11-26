@@ -6,6 +6,10 @@
 #IF LESS THEN MIN THEN MIN
 #IF MORE THAN MAX THEN MAX
 
+import time
+import json
+
+from utils.git_commit_hash import commit_hash
 from utils.format_dataframe import format_dataframe_info
 from src.data.load_processed_data import load_clean_mimic_data
 from src.models.train import (
@@ -67,95 +71,119 @@ binary_features = []
 def pipeline():
 
     mlflow.set_tracking_uri("http://localhost:5000")
-    mlflow.set_experiment("Experiment #6")
+    mlflow.set_experiment("Experiment 10")
 
-    ensure_directories()
+    mlflow_tags = {
+        "git commit hash": commit_hash,
+        "ml.note.content": "View dashboard: [Training Report](https://physionet.org/content/mimiciii/1.4/)",
+        "SQL Version": "PostgreSQL 18.6",
+        "Random Seed": "42",
+        "Features": json.dumps(categorical_features + numeric_features)
+    }
 
-    df = load_clean_mimic_data()
+    with mlflow.start_run(run_name=f"ml_pipeline_run_{time.ctime()}", tags=mlflow_tags):
 
-    ml_pipeline_logger.info(f"DataFrame Info:\n {format_dataframe_info(df)}")
-    ml_pipeline_logger.info(df.head())
+        ensure_directories()
 
-    ml_pipeline_logger.info(f'Missingness per column:\n {df.isnull().mean().round(3)}')
+        df = load_clean_mimic_data()
 
-    X = df.drop(columns=['icu_expire_flag'])
-    y = df['icu_expire_flag']
-    all_data_scale_pos_weight = sum(y == 0) / sum(y == 1)
+        ml_pipeline_logger.info(f"DataFrame Info:\n {format_dataframe_info(df)}")
+        ml_pipeline_logger.info(df.head())
 
-    groups = df['subject_id']
+        ml_pipeline_logger.info(f'Missingness per column:\n {df.isnull().mean().round(3)}')
 
-    ml_pipeline_logger.info(f'Class balance for icu_expire_flag: {y.value_counts().to_dict()}')
-    ml_pipeline_logger.info(f'Percentile balance for icu_expire_flag: {y.value_counts(normalize=True).round(3).to_dict()}')
+        X = df.drop(columns=['icu_expire_flag'])
+        y = df['icu_expire_flag']
+        all_data_scale_pos_weight = sum(y == 0) / sum(y == 1)
 
-    #Full Data split
-    #To keep a chunk of data for final metric test
-    sgkf = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)
+        groups = df['subject_id']
 
-    all_train_idx, all_test_idx = next(sgkf.split(X, y, groups))
+        ml_pipeline_logger.info(f'Class balance for icu_expire_flag: {y.value_counts().to_dict()}')
+        ml_pipeline_logger.info(f'Percentile balance for icu_expire_flag: {y.value_counts(normalize=True).round(3).to_dict()}')
 
-    X_train, X_final_test = X.iloc[all_train_idx], X.iloc[all_test_idx]
-    y_train, y_final_test = y.iloc[all_train_idx], y.iloc[all_test_idx]
-    groups_train, groups_final_test = groups.iloc[all_train_idx], groups.iloc[all_test_idx]
+        #Full Data split
+        #To keep a chunk of data for final metric test
+        sgkf = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)
 
-    cv_sgkf = StratifiedGroupKFold(n_splits=3, shuffle=True, random_state=42)
+        all_train_idx, all_test_idx = next(sgkf.split(X, y, groups))
 
-    #FIRST PASS: Train all default models
-    trained_default_models = train_default_models(X_train, y_train, groups_train, cv_sgkf, numeric_features, categorical_features, MODELS)
+        X_train, X_final_test = X.iloc[all_train_idx], X.iloc[all_test_idx]
+        y_train, y_final_test = y.iloc[all_train_idx], y.iloc[all_test_idx]
+        groups_train, groups_final_test = groups.iloc[all_train_idx], groups.iloc[all_test_idx]
 
-    #Get top k performing models
-    selection_config = model_selection_yaml()
-    top_models = top_k_models(trained_default_models, selection_config, selection_config["num_models_hyperparameter_tune"])
+        cv_sgkf = StratifiedGroupKFold(n_splits=3, shuffle=True, random_state=42)
 
-    #SECOND PASS: General hypertune top k models to get best model
-    hyperparameters = formatted_hyper_parameter_yaml()
+        #FIRST PASS: Train all default models
+        trained_default_models = train_default_models(X_train, y_train, groups_train, cv_sgkf, numeric_features, categorical_features, MODELS, mlflow_tags)
 
-    hypertuned_models, performances = coarse_tune_models(X_train, y_train, groups_train, cv_sgkf, numeric_features, categorical_features, top_models, hyperparameters, "randomized_search")
+        #Get top k performing models
+        selection_config = model_selection_yaml()
+        top_models = top_k_models(trained_default_models, selection_config, selection_config["num_models_hyperparameter_tune"])
 
-    #Select best model from coarse search
-    top_model = top_k_models(performances, selection_config, selection_config["num_top_models"])[0]
+        #SECOND PASS: General hypertune top k models to get best model
+        hyperparameters = formatted_hyper_parameter_yaml()
 
-    #THIRD PASS: Large compute hypertune search for best model
-    ml_pipeline_logger.info(hypertuned_models[top_model].best_params_)
+        hypertuned_models, performances = coarse_tune_models(X_train, y_train, groups_train, cv_sgkf, numeric_features, categorical_features, top_models, hyperparameters, "randomized_search", mlflow_tags)
 
-    parameters = hyper_parameter_yaml()
+        #Select best model from coarse search
+        top_model = top_k_models(performances, selection_config, selection_config["num_top_models"])[0]
 
-    params = make_fine_tune_params(hypertuned_models, top_model, parameters)
+        #THIRD PASS: Large compute hypertune search for best model
 
-    best_model_hypertuned, best_model_performance = hypertune(X_train, y_train, groups_train, cv_sgkf, numeric_features, categorical_features, top_model, params, "grid_search", STAGE="fine_tune_", NESTED=False)
+        parameters = hyper_parameter_yaml()
 
-    #Last train and test for top model with optimal params
-    #THIS CAN USE THE GET_PIPELINE MODULARIZED FUNC
-    #BUT FIRST SEE BELOW
-    #CHECK DON'T I NEED TO PASS THE TRAIN CHECK THE GROUPS TEST?
-    preprocessor = get_preprocessor(numeric_features, categorical_features)
+        params = make_fine_tune_params(hypertuned_models, top_model, parameters)
 
-    model123 = get_model(top_model, all_data_scale_pos_weight)
+        best_model_hypertuned, best_model_performance = hypertune(X_train, y_train, groups_train, cv_sgkf, numeric_features, categorical_features, top_model, params, "grid_search", "fine_tune_", mlflow_tags)
 
-    best_clf = Pipeline(steps=[
-        ('preprocessor', preprocessor),
-        (top_model, model123)
-    ])
+        #Last train and test for top model with optimal params
+        #THIS CAN USE THE GET_PIPELINE MODULARIZED FUNC
+        #BUT FIRST SEE BELOW
+        #CHECK DON'T I NEED TO PASS THE TRAIN CHECK THE GROUPS TEST?
 
-    best_clf.set_params(**best_model_hypertuned.best_params_)
+        best_clf = Pipeline(steps=[
+            ('preprocessor', get_preprocessor(numeric_features, categorical_features)),
+            (top_model, get_model(top_model, all_data_scale_pos_weight))
+        ])
 
-    best_clf.fit(X_train, y_train) #Put in groups_train??
-    y_preds = best_clf.predict(X_final_test)
-    y_probs = best_clf.predict_proba(X_final_test)[:, 1]
+        best_clf.set_params(**best_model_hypertuned.best_params_)
 
-    ml_pipeline_logger.info("Final Model Performance")
-    evaluate(y_final_test, y_preds, y_probs, "best_model", top_model, None)
+        with mlflow.start_run(run_name="final_" + top_model, nested=True, tags=mlflow_tags):
 
-    #Train a final optimal model on all the data.
-    preprocessor = get_preprocessor(numeric_features, categorical_features)
+            best_clf.fit(X_train, y_train) #Put in groups_train??
+            y_preds = best_clf.predict(X_final_test)
+            y_probs = best_clf.predict_proba(X_final_test)[:, 1]
 
-    final_clf = Pipeline(steps=[
-        ('preprocessor', preprocessor),
-        (top_model, get_model(top_model, all_data_scale_pos_weight))
-    ])
+            ml_pipeline_logger.info("Final Model Performance")
 
-    final_clf.fit(X, y)
-    save_model(final_clf)
-    load_check = load_model()
+            # log the parameters
+            mlflow.log_params(best_model_hypertuned.best_params_)
+
+            # set a tag
+            mlflow.set_tags({"stage": "final", "model": top_model})
+
+            acc, precision, recall, f1, avg_precision, roc_auc, brier_score = evaluate(y_final_test, y_preds, y_probs, "best_model", top_model, None)
+
+            mlflow.log_metrics({
+                "accuracy": acc,
+                "precision": precision,
+                "recall": recall,
+                "f1": f1,
+                "avg_precision": avg_precision,
+                "roc_auc": roc_auc,
+                "brier_score": brier_score
+            })
+
+        #Train a final optimal model on all the data.
+
+        final_clf = Pipeline(steps=[
+            ('preprocessor', get_preprocessor(numeric_features, categorical_features)),
+            (top_model, get_model(top_model, all_data_scale_pos_weight))
+        ])
+
+        final_clf.fit(X, y)
+        save_model(final_clf)
+        load_check = load_model()
 
 if __name__ == "__main__":
     pipeline()

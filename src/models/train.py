@@ -80,7 +80,7 @@ def make_fine_tune_params(hypertuned_models, top_model, parameters):
 
     return params
 
-def cross_validate_model(X: pd.DataFrame, y: pd.DataFrame, groups: pd.Series[str], sgkf: StratifiedGroupKFold, numeric_features: list[str], categorical_features: list[str], model_name: str, mlflow_run_name) -> dict[str, dict[str, float]]:
+def cross_validate_model(X: pd.DataFrame, y: pd.DataFrame, groups: pd.Series[str], sgkf: StratifiedGroupKFold, numeric_features: list[str], categorical_features: list[str], model_name: str, mlflow_run_name, mlflow_tags) -> dict[str, dict[str, float]]:
 
     performance = {}
 
@@ -143,22 +143,22 @@ def cross_validate_model(X: pd.DataFrame, y: pd.DataFrame, groups: pd.Series[str
 
     return {model_name: performance[top_model]}
 
-def train_default_models(X, y, groups, sgkf, numeric_features, categorical_features, MODELS):
+def train_default_models(X, y, groups, sgkf, numeric_features, categorical_features, MODELS, mlflow_tags):
 
     default_model_performances = {}
 
-    with mlflow.start_run(run_name="default model cv"):
+    with mlflow.start_run(run_name="default_model_cv", nested=True, tags=mlflow_tags):
 
         for model_name in MODELS:
             training_logger.info(f"Performing Cross-Validation for default model: {model_name}")
 
-            with mlflow.start_run(run_name="default_cv_" + model_name, nested=True):
-                performance = cross_validate_model(X, y, groups, sgkf, numeric_features, categorical_features, model_name, "default")
+            with mlflow.start_run(run_name="default_cv_" + model_name, nested=True, tags=mlflow_tags):
+                performance = cross_validate_model(X, y, groups, sgkf, numeric_features, categorical_features, model_name, "default", mlflow_tags)
                 default_model_performances.update(performance)
 
     return default_model_performances
 
-def hypertune(X, y, groups, sgkf, numeric_features, categorical_features, model_name, params, tuner_name: str, STAGE, NESTED):
+def hypertune(X, y, groups, sgkf, numeric_features, categorical_features, model_name, params, tuner_name: str, STAGE, mlflow_tags):
 
     #MANUALLY GRAB A SPLIT USING THE SGKF
 
@@ -179,7 +179,7 @@ def hypertune(X, y, groups, sgkf, numeric_features, categorical_features, model_
 
     tuner = get_hypertuner(tuner_name, clf, params, sgkf)
 
-    with mlflow.start_run(run_name=STAGE + model_name, nested=NESTED):
+    with mlflow.start_run(run_name=STAGE + model_name, nested=True, tags=mlflow_tags):
 
         tuner.fit(X_train, y_train, groups=groups_train)
 
@@ -243,15 +243,15 @@ def hypertune(X, y, groups, sgkf, numeric_features, categorical_features, model_
 
     return tuner, performance
 
-def coarse_tune_models(X, y, groups, cv_sgkf, numeric_features, categorical_features, top_models, hyperparameters, tuner_name):
+def coarse_tune_models(X, y, groups, cv_sgkf, numeric_features, categorical_features, top_models, hyperparameters, tuner_name, mlflow_tags):
 
     hypertuned_models = {}
     performances = {}
 
-    with mlflow.start_run(run_name="coarse tuning"):
+    with mlflow.start_run(run_name="coarse_tuning", nested=True, tags=mlflow_tags):
 
         for model_name in top_models:
-            hypertuned_models[model_name], performance = hypertune(X, y, groups, cv_sgkf, numeric_features, categorical_features, model_name, hyperparameters[model_name], tuner_name, STAGE="coarse_tuning_", NESTED=True)
+            hypertuned_models[model_name], performance = hypertune(X, y, groups, cv_sgkf, numeric_features, categorical_features, model_name, hyperparameters[model_name], tuner_name, "coarse_tuning_", mlflow_tags)
             performances.update(performance)
 
     return hypertuned_models, performances
