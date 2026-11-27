@@ -79,10 +79,10 @@ def evaluate(y_test: list[int], y_preds: list[int], y_probas: list[float], step:
         case "default":
             file_name = f'{step}_{model}_{fold}_metrics.json'
 
-        case "coarse_hypertune":
+        case "coarse_tuning_":
             file_name = f'{step}_{model}_metrics.json'
 
-        case "fine_hypertune":
+        case "fine_tune_":
             file_name = f'{step}_{model}_metrics.json'
 
         case "best_model":

@@ -103,7 +103,8 @@ def cross_validate_model(X: pd.DataFrame, y: pd.DataFrame, groups: pd.Series[str
 
         clf = get_pipeline(model_name, scale_pos_weight, numeric_features, categorical_features)
 
-        with mlflow.start_run(run_name="default_cv_" + model_name + f"_fold_{fold}", nested=True):
+        with mlflow.start_run(run_name="default_cv_" + model_name + f"_fold_{fold}", nested=True, tags=mlflow_tags):
+
             clf.fit(X_train, y_train)  # Pass this groups_train?
             preds = clf.predict(X_val)
             probs = clf.predict_proba(X_val)[:, 1]
@@ -188,10 +189,10 @@ def hypertune(X, y, groups, sgkf, numeric_features, categorical_features, model_
         y_preds = best_model.predict(X_val)
         y_probs = best_model.predict_proba(X_val)[:, 1]
 
-        acc, precision, recall, f1, avg_precision, roc_auc, brier_score = evaluate(y_val, y_preds, y_probs, "coarse_hypertune", model_name, None)
+        acc, precision, recall, f1, avg_precision, roc_auc, brier_score = evaluate(y_val, y_preds, y_probs, STAGE, model_name, None)
 
         #log the parameters
-        mlflow.log_params(params)
+        mlflow.log_params(tuner.best_params_)
 
         # set a tag
         mlflow.set_tags({"stage": STAGE, "model": model_name})
