@@ -148,7 +148,7 @@ def pipeline():
 
         best_clf.set_params(**best_model_hypertuned.best_params_)
 
-        with mlflow.start_run(run_name="final_" + top_model, nested=True, tags=mlflow_tags):
+        with mlflow.start_run(run_name="final_test_" + top_model, nested=True, tags=mlflow_tags):
 
             best_clf.fit(X_train, y_train) #Put in groups_train??
             y_preds = best_clf.predict(X_final_test)
@@ -159,10 +159,19 @@ def pipeline():
             # log the parameters
             mlflow.log_params(best_model_hypertuned.best_params_)
 
-            # set a tag
-            mlflow.set_tags({"stage": "final", "model": top_model})
+            # set a tagv
+            mlflow.set_tags({"stage": "final_test", "model": top_model})
 
             acc, precision, recall, f1, avg_precision, roc_auc, brier_score = evaluate(y_final_test, y_preds, y_probs, "best_model", top_model, None)
+
+            # log the model
+            mlflow.sklearn.log_model(
+                sk_model=best_clf,
+                name="final_model_" + top_model,
+                input_example=None,
+                signature=None,
+                skops_trusted_types=["numpy.dtype", "sklearn.tree._tree.Tree", "xgboost.core.Booster", "xgboost.sklearn.XGBClassifier"]
+            )
 
             mlflow.log_metrics({
                 "accuracy": acc,
@@ -174,14 +183,30 @@ def pipeline():
                 "brier_score": brier_score
             })
 
-        #Train a final optimal model on all the data.
+        with mlflow.start_run(run_name="final_model", nested=True, tags=mlflow_tags):
 
-        final_clf = Pipeline(steps=[
-            ('preprocessor', get_preprocessor(numeric_features, categorical_features)),
-            (top_model, get_model(top_model, all_data_scale_pos_weight))
-        ])
+            # set a tag
+            mlflow.set_tags({"stage": "final", "model": top_model})
 
-        final_clf.fit(X, y)
+            #Train a final optimal model on all the data.
+
+            final_clf = Pipeline(steps=[
+                ('preprocessor', get_preprocessor(numeric_features, categorical_features)),
+                (top_model, get_model(top_model, all_data_scale_pos_weight))
+            ])
+
+            final_clf.set_params(**best_model_hypertuned.best_params_)
+            final_clf.fit(X, y)
+
+            # log the model
+            mlflow.sklearn.log_model(
+                sk_model=final_clf,
+                name="final_model_" + top_model,
+                input_example=None,
+                signature=None,
+                skops_trusted_types=["numpy.dtype", "sklearn.tree._tree.Tree", "xgboost.core.Booster", "xgboost.sklearn.XGBClassifier"]
+            )
+
         save_model(final_clf)
         load_check = load_model()
 
