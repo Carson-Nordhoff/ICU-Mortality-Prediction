@@ -1,11 +1,5 @@
 #MODEL TO-DO#
 
-#IN THE MIDDLE OF MAKING FINE HYPERTUNING
-#AMOUNT OF STEPS BASED ON "PRIORITY" OF PARAM
-#ALSO CHECK IF THE NUMBER IS WITHIN MIN/MAX
-#IF LESS THEN MIN THEN MIN
-#IF MORE THAN MAX THEN MAX
-
 import time
 import json
 
@@ -110,6 +104,7 @@ def pipeline():
         X_train, X_final_test = X.iloc[all_train_idx], X.iloc[all_test_idx]
         y_train, y_final_test = y.iloc[all_train_idx], y.iloc[all_test_idx]
         groups_train, groups_final_test = groups.iloc[all_train_idx], groups.iloc[all_test_idx]
+        train_scale_pos_weight = sum(y_train == 0) / sum(y_train == 1)
 
         cv_sgkf = StratifiedGroupKFold(n_splits=3, shuffle=True, random_state=42)
 
@@ -136,21 +131,16 @@ def pipeline():
 
         best_model_hypertuned, best_model_performance = hypertune(X_train, y_train, groups_train, cv_sgkf, numeric_features, categorical_features, top_model, params, "grid_search", "fine_tune_", mlflow_tags)
 
-        #Last train and test for top model with optimal params
-        #THIS CAN USE THE GET_PIPELINE MODULARIZED FUNC
-        #BUT FIRST SEE BELOW
-        #CHECK DON'T I NEED TO PASS THE TRAIN CHECK THE GROUPS TEST?
-
         best_clf = Pipeline(steps=[
             ('preprocessor', get_preprocessor(numeric_features, categorical_features)),
-            (top_model, get_model(top_model, all_data_scale_pos_weight))
+            (top_model, get_model(top_model, train_scale_pos_weight))
         ])
 
         best_clf.set_params(**best_model_hypertuned.best_params_)
 
         with mlflow.start_run(run_name="final_test_" + top_model, nested=True, tags=mlflow_tags):
 
-            best_clf.fit(X_train, y_train) #Put in groups_train??
+            best_clf.fit(X_train, y_train)
             y_preds = best_clf.predict(X_final_test)
             y_probs = best_clf.predict_proba(X_final_test)[:, 1]
 
