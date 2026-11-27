@@ -7,6 +7,16 @@ from src.models.evaluate import evaluate
 import pandas as pd
 import mlflow
 
+scoring = {
+    "accuracy": "accuracy",
+    "precision": "precision",
+    "recall": "recall",
+    "f1": "f1",
+    "avg_precision": "average_precision",
+    "roc_auc": "roc_auc",
+    "brier_score": "neg_brier_score",
+}
+
 from utils.mlflow_config import set_mlflow
 
 training_logger = get_ml_system_logger(__name__)
@@ -161,35 +171,32 @@ def train_default_models(X, y, groups, sgkf, numeric_features, categorical_featu
 
 def hypertune(X, y, groups, sgkf, numeric_features, categorical_features, model_name, params, tuner_name: str, STAGE, mlflow_tags):
 
-    #MANUALLY GRAB A SPLIT USING THE SGKF
-
-    outer_sgkf = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)
-
-    train_idx, val_idx = next(outer_sgkf.split(X, y, groups))
-
-    X_train, X_val = X.iloc[train_idx], X.iloc[val_idx]
-    y_train, y_val = y.iloc[train_idx], y.iloc[val_idx]
-    groups_train, groups_val = groups.iloc[train_idx], groups.iloc[val_idx]
-
-    scale_pos_weight = sum(y_train==0) / sum(y_train==1)
+    scale_pos_weight = sum(y==0) / sum(y==1)
 
     clf = get_pipeline(model_name, scale_pos_weight, numeric_features, categorical_features)
 
-    training_logger.info("------------------")
-    training_logger.info(f"Model Name: {model_name}")
+    training_logger.info(f"STEP: {STAGE}_{model_name}")
 
     tuner = get_hypertuner(tuner_name, clf, params, sgkf)
 
     with mlflow.start_run(run_name=STAGE + model_name, nested=True, tags=mlflow_tags):
 
-        tuner.fit(X_train, y_train, groups=groups_train)
+        tuner.fit(X, y, groups=groups)
 
-        best_model = tuner.best_estimator_
+        index = tuner.best_index_
 
-        y_preds = best_model.predict(X_val)
-        y_probs = best_model.predict_proba(X_val)[:, 1]
+        metrics = {}
+        str_output = f"Model: {model_name} | "
+        for measurement in scoring:
 
-        acc, precision, recall, f1, avg_precision, roc_auc, brier_score = evaluate(y_val, y_preds, y_probs, STAGE, model_name, None)
+            if measurement == "brier_score":
+                result = -tuner.cv_results_[f"mean_test_{measurement}"][index]
+
+            else:
+                result = tuner.cv_results_[f"mean_test_{measurement}"][index]
+
+            metrics[measurement] = result
+            str_output += f"{measurement}: {result:.3f} | "
 
         #log the parameters
         mlflow.log_params(tuner.best_params_)
@@ -199,46 +206,21 @@ def hypertune(X, y, groups, sgkf, numeric_features, categorical_features, model_
 
         #log the model
         mlflow.sklearn.log_model(
-            sk_model=best_model,
+            sk_model=tuner.best_estimator_,
             name=STAGE + model_name,
             input_example=None,
             signature=None,
             skops_trusted_types=["numpy.dtype", "sklearn.tree._tree.Tree", "xgboost.core.Booster", "xgboost.sklearn.XGBClassifier"]
         )
 
-        mlflow.log_metrics({
-            "accuracy": acc,
-            "precision": precision,
-            "recall": recall,
-            "f1": f1,
-            "avg_precision": avg_precision,
-            "roc_auc": roc_auc,
-            "brier_score": brier_score
-        })
+        mlflow.log_metrics(metrics)
 
-        training_logger.info(
-            f"Model: {model_name} | "
-            f"Accuracy: {acc:.3f} | "
-            f"Precision: {precision:.3f} | "
-            f"Recall: {recall:.3f} | "
-            f"F1 Score: {f1:.3f} | "
-            f"Average Precision: {avg_precision:.3f} | "
-            f"ROC AUC: {roc_auc:.3f} | "
-            f"Brier Score: {brier_score:.3f} |"
-        )
+        training_logger.info(str_output)
 
         performance = {
             model_name: {
-                'clf': best_model,
-                'metrics': {
-                    'accuracy': acc,
-                    'precision': precision,
-                    'recall': recall,
-                    'f1': f1,
-                    'avg_precision': avg_precision,
-                    'roc_auc': roc_auc,
-                    'brier_score': brier_score
-                }
+                'clf': tuner.best_estimator_,
+                'metrics': metrics
             }
         }
 

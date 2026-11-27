@@ -18,6 +18,16 @@ MODELS = ["logistic_regression", "random_forest", "xgboost"]
 
 #add type hinting for return type?
 
+scoring = {
+    "accuracy": "accuracy",
+    "precision": "precision",
+    "recall": "recall",
+    "f1": "f1",
+    "avg_precision": "average_precision",
+    "roc_auc": "roc_auc",
+    "brier_score": "neg_brier_score",
+}
+
 def get_model(name: str, scale_pos_weight: float):
 
     match name:
@@ -75,7 +85,8 @@ def get_hypertuner(tuner_name: str, clf: Pipeline, params, sgkf: StratifiedGroup
                 estimator=clf,
                 param_grid=params,
                 cv=sgkf,
-                scoring="recall",
+                scoring=scoring,
+                refit="recall",
                 error_score="raise"
             )
         case "randomized_search":
@@ -84,7 +95,8 @@ def get_hypertuner(tuner_name: str, clf: Pipeline, params, sgkf: StratifiedGroup
                 param_distributions=params,
                 cv=sgkf,
                 n_iter=3,
-                scoring="recall",
+                scoring=scoring,
+                refit="recall",
                 error_score="raise"
             )
 
